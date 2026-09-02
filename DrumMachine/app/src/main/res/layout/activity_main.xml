@@ -1,0 +1,495 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Drummachi v4.3 - Design oficial (Felipe/Gemini; spec extraída por visão, gemini-3.6-flash)
+     Paisagem. Header ~18% + grade de cards 2x2 (gap 12dp):
+       [hamb + Style/Blues 1] [128 BPM] [seletor 1-4]
+       [TAP TEMPO]            [VERSE]
+       [PLAY]                 [FILL]
+     Motor Oboe v4.2 intocado - mudança é só de interface. -->
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@drawable/bg_screen">
+
+    <!-- ===== GUIDELINES (proporções da imagem: header 18%, grade 2x2) ===== -->
+    <androidx.constraintlayout.widget.Guideline
+        android:id="@+id/gHeaderEnd"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        app:layout_constraintGuide_percent="0.18" />
+
+    <androidx.constraintlayout.widget.Guideline
+        android:id="@+id/gGridMid"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        app:layout_constraintGuide_percent="0.59" />
+
+    <!-- ===== HEADER (0-18%): menu + Style/Blues 1 (esquerda) ===== -->
+    <LinearLayout
+        android:id="@+id/headerLeft"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:gravity="center_vertical"
+        android:orientation="horizontal"
+        app:layout_constraintBottom_toTopOf="@id/gHeaderEnd"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintVertical_bias="0.5">
+
+        <View
+            android:id="@+id/btnMenu"
+            android:layout_width="34dp"
+            android:layout_height="34dp"
+            android:layout_marginStart="20dp"
+            android:background="@drawable/ic_menu"
+            android:clickable="true"
+            android:focusable="true"
+            android:contentDescription="@string/menu_title" />
+
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="12dp"
+            android:orientation="vertical">
+
+            <TextView
+                android:id="@+id/styleLabel"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/style_label"
+                android:textColor="@color/text_secondary"
+                android:textSize="12sp" />
+
+            <TextView
+                android:id="@+id/styleValue"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="2dp"
+                android:fontFamily="sans-serif-medium"
+                android:text="@string/style_value"
+                android:textColor="@color/text_primary"
+                android:textSize="20sp" />
+        </LinearLayout>
+    </LinearLayout>
+
+    <!-- ===== HEADER: BPM (centro) + slider contínuo (v4.4) ===== -->
+    <LinearLayout
+        android:id="@+id/headerCenter"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:gravity="center_horizontal"
+        android:orientation="vertical"
+        app:layout_constraintBottom_toTopOf="@id/gHeaderEnd"
+        app:layout_constraintEnd_toStartOf="@id/variationBar"
+        app:layout_constraintStart_toEndOf="@id/headerLeft"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintVertical_bias="0.5">
+
+        <TextView
+            android:id="@+id/bpmLabel"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:fontFeatureSettings="tnum"
+            android:text="@string/bpm_default"
+            android:textColor="@color/text_primary"
+            android:textSize="24sp"
+            android:textStyle="bold" />
+
+        <com.drummachi.BpmSlider
+            android:id="@+id/bpmSlider"
+            android:layout_width="match_parent"
+            android:layout_height="26dp"
+            android:layout_marginStart="6dp"
+            android:layout_marginEnd="6dp"
+            android:contentDescription="BPM"
+            android:importantForAccessibility="yes" />
+    </LinearLayout>
+
+    <!-- ===== HEADER: barra segmentada do compasso (construída em código: 4 ou 6) ===== -->
+    <LinearLayout
+        android:id="@+id/variationBar"
+        android:layout_width="wrap_content"
+        android:layout_height="38dp"
+        android:layout_marginEnd="20dp"
+        android:background="@drawable/bg_segment_container"
+        android:gravity="center_vertical"
+        android:orientation="horizontal"
+        android:padding="3dp"
+        app:layout_constraintBottom_toTopOf="@id/gHeaderEnd"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintVertical_bias="0.5">
+    </LinearLayout>
+
+    <!-- ===== v4.8: DRUMMACHI no meio dos botões (detalhe fino) ===== -->
+    <TextView
+        android:id="@+id/brandCenter"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:alpha="0.55"
+        android:fontFamily="sans-serif-black"
+        android:letterSpacing="0.35"
+        android:text="DRUMMACHI"
+        android:textColor="@color/text_primary"
+        android:textSize="13sp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="@id/gHeaderEnd" />
+
+    <!-- ===== GRADE 2x2 ===== -->
+
+    <!-- Card 1: TAP TEMPO (top-left) -->
+    <FrameLayout
+        android:id="@+id/tapTempoButton"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:layout_marginStart="20dp"
+        android:layout_marginEnd="6dp"
+        android:layout_marginTop="14dp"
+        android:layout_marginBottom="6dp"
+        android:background="@drawable/bg_btn_tap"
+        android:clickable="true"
+        android:focusable="true"
+        app:layout_constraintBottom_toTopOf="@id/gGridMid"
+        app:layout_constraintEnd_toStartOf="@id/crashButton"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="@id/gHeaderEnd">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_gravity="center"
+            android:gravity="center_horizontal"
+            android:orientation="vertical">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/tap_tempo"
+                android:textColor="@color/text_primary"
+                android:textSize="18sp"
+                android:textStyle="bold" />
+
+            <View
+                android:layout_width="52dp"
+                android:layout_height="52dp"
+                android:layout_marginTop="10dp"
+                android:background="@drawable/bg_dial" />
+        </LinearLayout>
+    </FrameLayout>
+
+    <!-- Card 2 (NOVO v4.8): CRASH cymbal (top-center) — toca imediatamente -->
+    <FrameLayout
+        android:id="@+id/crashButton"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:layout_marginStart="6dp"
+        android:layout_marginEnd="6dp"
+        android:layout_marginTop="14dp"
+        android:layout_marginBottom="6dp"
+        android:background="@drawable/bg_btn_part"
+        android:clickable="true"
+        android:focusable="true"
+        app:layout_constraintBottom_toTopOf="@id/gGridMid"
+        app:layout_constraintEnd_toStartOf="@id/songPartButton"
+        app:layout_constraintStart_toEndOf="@id/tapTempoButton"
+        app:layout_constraintTop_toTopOf="@id/gHeaderEnd">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_gravity="center"
+            android:gravity="center_horizontal"
+            android:orientation="vertical">
+
+            <ImageView
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:layout_marginTop="8dp"
+                android:contentDescription="@null"
+                android:src="@drawable/ic_crash" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="10dp"
+                android:fontFamily="sans-serif-black"
+                android:text="CRASH"
+                android:textColor="@color/text_primary"
+                android:textSize="20sp" />
+        </LinearLayout>
+    </FrameLayout>
+
+    <!-- Card 3: VERSE (top right) - toggles VERSE/CHORUS on tap -->
+    <FrameLayout
+        android:id="@+id/songPartButton"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:layout_marginStart="6dp"
+        android:layout_marginEnd="20dp"
+        android:layout_marginTop="14dp"
+        android:layout_marginBottom="6dp"
+        android:background="@drawable/bg_btn_part"
+        android:clickable="true"
+        android:focusable="true"
+        app:layout_constraintBottom_toTopOf="@id/gGridMid"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toEndOf="@id/crashButton"
+        app:layout_constraintTop_toTopOf="@id/gHeaderEnd">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_gravity="center"
+            android:gravity="center_horizontal"
+            android:orientation="vertical">
+
+            <ImageView
+                android:layout_width="44dp"
+                android:layout_height="44dp"
+                android:layout_marginTop="8dp"
+                android:contentDescription="@null"
+                android:src="@drawable/ic_note_double" />
+
+            <FrameLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="10dp"
+                android:layout_marginBottom="10dp">
+
+                <TextView
+                    android:id="@+id/songPartText"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center"
+                    android:gravity="center"
+                    android:text="@string/song_part"
+                    android:textColor="@color/text_primary"
+                    android:textSize="26sp"
+                    android:textStyle="bold" />
+            </FrameLayout>
+        </LinearLayout>
+    </FrameLayout>
+
+    <!-- Card 3: PLAY (inf. esquerdo) - AÇÃO PRINCIPAL, pulsa a cada batida -->
+    <FrameLayout
+        android:id="@+id/playButton"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:layout_marginStart="20dp"
+        android:layout_marginEnd="6dp"
+        android:layout_marginTop="6dp"
+        android:layout_marginBottom="16dp"
+        android:background="@drawable/bg_btn_play"
+        android:clickable="true"
+        android:focusable="true"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toStartOf="@id/fillButton"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="@id/gGridMid">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:gravity="center_horizontal"
+            android:orientation="vertical"
+            android:paddingTop="12dp"
+            android:paddingBottom="14dp">
+
+            <ImageView
+                android:layout_width="44dp"
+                android:layout_height="44dp"
+                android:contentDescription="@null"
+                android:src="@drawable/ic_play_triangle" />
+
+            <Space
+                android:layout_width="0dp"
+                android:layout_height="0dp"
+                android:layout_weight="1" />
+
+            <TextView
+                android:id="@+id/playText"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:fontFamily="sans-serif-black"
+                android:text="@string/play"
+                android:textColor="@color/text_primary"
+                android:textSize="30sp" />
+        </LinearLayout>
+
+        <!-- flash branco do pulso da batida (alpha animado pelo onBeat) -->
+        <View
+            android:id="@+id/playFlash"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:alpha="0"
+            android:background="@drawable/bg_flash_overlay"
+            android:clickable="false"
+            android:focusable="false"
+            android:importantForAccessibility="no" />
+    </FrameLayout>
+
+    <!-- Card 4: FILL (inf. direito) - virada de 1 compasso -->
+    <FrameLayout
+        android:id="@+id/fillButton"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:layout_marginStart="6dp"
+        android:layout_marginEnd="20dp"
+        android:layout_marginTop="6dp"
+        android:layout_marginBottom="16dp"
+        android:background="@drawable/bg_btn_fill"
+        android:clickable="true"
+        android:focusable="true"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toEndOf="@id/playButton"
+        app:layout_constraintTop_toTopOf="@id/gGridMid">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:gravity="center_horizontal"
+            android:orientation="vertical"
+            android:paddingTop="12dp"
+            android:paddingBottom="14dp">
+
+            <ImageView
+                android:layout_width="44dp"
+                android:layout_height="44dp"
+                android:contentDescription="@null"
+                android:src="@drawable/ic_snare" />
+
+            <Space
+                android:layout_width="0dp"
+                android:layout_height="0dp"
+                android:layout_weight="1" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:fontFamily="sans-serif-black"
+                android:text="@string/fill"
+                android:textColor="@color/text_primary"
+                android:textSize="30sp" />
+        </LinearLayout>
+
+        <!-- v4.4: glow azul claro quando o fill está ativo (alpha animado) -->
+        <View
+            android:id="@+id/fillGlow"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:alpha="0"
+            android:background="@drawable/bg_fill_glow"
+            android:clickable="false"
+            android:focusable="false"
+            android:importantForAccessibility="no" />
+    </FrameLayout>
+
+    <!-- ===== v4.7: MIXER (painel lateral — gesto de 2 dedos) ===== -->
+    <FrameLayout
+        android:id="@+id/mixerPanel"
+        android:layout_width="wrap_content"
+        android:layout_height="match_parent"
+        android:layout_gravity="end"
+        android:background="#E60D1015"
+        android:clickable="true"
+        android:focusable="true"
+        android:elevation="16dp"
+        android:translationX="340dp"
+        android:visibility="gone"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="parent">
+
+        <LinearLayout
+            android:layout_width="300dp"
+            android:layout_height="match_parent"
+            android:orientation="vertical"
+            android:padding="18dp">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:fontFamily="sans-serif-black"
+                android:text="MIXER"
+                android:textColor="@color/text_primary"
+                android:textSize="22sp" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="10dp"
+                android:text="VOLUME · TONE"
+                android:textColor="@color/text_muted"
+                android:textSize="11sp" />
+
+            <!-- KICK -->
+            <include
+                android:id="@+id/mixerKick"
+                layout="@layout/mixer_row"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content" />
+
+            <!-- SNARE -->
+            <include
+                android:id="@+id/mixerSnare"
+                layout="@layout/mixer_row"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content" />
+
+            <!-- HAT -->
+            <include
+                android:id="@+id/mixerHat"
+                layout="@layout/mixer_row"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content" />
+
+            <!-- TOM FT -->
+            <include
+                android:id="@+id/mixerTomFt"
+                layout="@layout/mixer_row"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content" />
+
+            <!-- TOM MT -->
+            <include
+                android:id="@+id/mixerTomMt"
+                layout="@layout/mixer_row"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content" />
+
+            <!-- TOM HT -->
+            <include
+                android:id="@+id/mixerTomHt"
+                layout="@layout/mixer_row"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content" />
+
+            <!-- CRASH (v4.8) -->
+            <include
+                android:id="@+id/mixerCrash"
+                layout="@layout/mixer_row"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content" />
+
+            <Space
+                android:layout_width="0dp"
+                android:layout_height="0dp"
+                android:layout_weight="1" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:gravity="center_horizontal"
+                android:layout_gravity="center_horizontal"
+                android:text="Deslize com 2 dedos para fechar"
+                android:textColor="@color/text_muted"
+                android:textSize="11sp" />
+        </LinearLayout>
+    </FrameLayout>
+
+</androidx.constraintlayout.widget.ConstraintLayout>

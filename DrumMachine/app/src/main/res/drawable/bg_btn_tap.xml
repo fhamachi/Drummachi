@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- v4.3 - Card TAP TEMPO: gradiente #1E293B -> #0F172A, borda #2A364F, radius 16 -->
+<selector xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:state_pressed="true">
+        <shape android:shape="rectangle">
+            <solid android:color="@color/tap_pressed" />
+            <stroke android:width="1dp" android:color="@color/tap_border" />
+            <corners android:radius="16dp" />
+        </shape>
+    </item>
+    <item>
+        <shape android:shape="rectangle">
+            <gradient
+                android:angle="270"
+                android:startColor="@color/tap_grad_top"
+                android:endColor="@color/tap_grad_bottom" />
+            <stroke android:width="1dp" android:color="@color/tap_border" />
+            <corners android:radius="16dp" />
+        </shape>
+    </item>
+</selector>

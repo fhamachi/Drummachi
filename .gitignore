@@ -1,0 +1,23 @@
+# Android / Gradle
+build/
+.gradle/
+local.properties
+captures/
+.externalNativeBuild/
+.cxx/
+*.apk
+*.aab
+*.zip
+
+# Backups e rascunhos locais (não fazem parte do código-fonte)
+backup-pre-*/
+assets-novos/
+botoes/
+Drummachi-v*.apk
+Drummachi-v*.zip
+LEIA-ME*.txt
+
+# IDE / SO
+.idea/
+*.iml
+.DS_Store

@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- v5.1: About com corpo HTML (link GoFundMe clicável) + chave Pix copiável + QR code -->
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:paddingStart="16dp"
+    android:paddingEnd="16dp"
+    android:paddingTop="8dp"
+    android:paddingBottom="8dp">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical">
+
+        <TextView
+            android:id="@+id/aboutBody"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textColor="?android:attr/textColorPrimary"
+            android:textSize="14sp"
+            android:lineSpacingMultiplier="1.1" />
+
+        <!-- v5.1: botão dedicado de doação (abre o navegador) — à prova de falhas -->
+        <Button
+            android:id="@+id/aboutDonate"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="12dp"
+            android:text="@string/about_donate_button"
+            android:textSize="14sp" />
+
+        <!-- Chave Pix + botão copiar -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="10dp"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:background="?android:attr/selectableItemBackground"
+            android:padding="4dp">
+
+            <TextView
+                android:id="@+id/aboutPixCode"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="@string/donate_pix"
+                android:textSize="13sp"
+                android:typeface="monospace"
+                android:textIsSelectable="true"
+                android:textColor="?android:attr/textColorPrimary" />
+
+            <Button
+                android:id="@+id/aboutPixCopy"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="8dp"
+                android:text="@string/about_pix_copy"
+                android:textSize="12sp"
+                android:minWidth="0dp"
+                android:minHeight="0dp"
+                android:paddingStart="12dp"
+                android:paddingEnd="12dp"
+                android:paddingTop="6dp"
+                android:paddingBottom="6dp" />
+        </LinearLayout>
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:text="@string/about_qr_hint"
+            android:textSize="13sp"
+            android:textColor="?android:attr/textColorSecondary" />
+
+        <ImageView
+            android:id="@+id/aboutQr"
+            android:layout_width="220dp"
+            android:layout_height="220dp"
+            android:layout_gravity="center_horizontal"
+            android:layout_marginTop="6dp"
+            android:src="@drawable/qr_pix"
+            android:contentDescription="@string/about_qr_hint"
+            android:adjustViewBounds="true" />
+    </LinearLayout>
+</ScrollView>

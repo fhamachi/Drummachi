@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Ícone simples: três círculos coloridos representando os pads de bateria -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+
+    <!-- Círculo vermelho (Kick) -->
+    <path
+        android:fillColor="#D32F2F"
+        android:pathData="M30,54 m-12,0 a12,12 0 1,1 24,0 a12,12 0 1,1 -24,0" />
+
+    <!-- Círculo azul (Snare) -->
+    <path
+        android:fillColor="#1976D2"
+        android:pathData="M54,54 m-12,0 a12,12 0 1,1 24,0 a12,12 0 1,1 -24,0" />
+
+    <!-- Círculo verde (Hat) -->
+    <path
+        android:fillColor="#388E3C"
+        android:pathData="M78,54 m-12,0 a12,12 0 1,1 24,0 a12,12 0 1,1 -24,0" />
+</vector>

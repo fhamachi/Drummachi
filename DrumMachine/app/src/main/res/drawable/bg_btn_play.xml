@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- v4.3 - Card PLAY: verde vibrante com bisel superior #10B981
+     (topo #10B981 -> #059669 -> #064E3B -> base #022C22), radius 16 -->
+<selector xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:state_pressed="true">
+        <shape android:shape="rectangle">
+            <solid android:color="@color/play_pressed" />
+            <corners android:radius="16dp" />
+        </shape>
+    </item>
+    <item>
+        <shape android:shape="rectangle">
+            <gradient
+                android:angle="270"
+                android:startColor="@color/play_bevel"
+                android:centerColor="@color/play_grad_top"
+                android:endColor="@color/play_grad_bottom" />
+            <corners android:radius="16dp" />
+        </shape>
+    </item>
+</selector>

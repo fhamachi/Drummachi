@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Drummachi v4.3 - Textos (design oficial) -->
+<resources>
+    <string name="app_name">Drummachi</string>
+    <string name="bpm_default">120 BPM</string>
+    <string name="bpm_format">%1$d BPM</string>
+
+    <!-- Seletor de estilo (menu de estilos v4.4) -->
+    <string name="style_label">Style</string>
+    <string name="style_value">Basic Rock</string>
+    <string name="menu_title">Menu</string>
+    <string name="menu_styles">Styles</string>
+    <string name="menu_import_midi">Import MIDI</string>
+    <string name="menu_about">About</string>
+    <string name="menu_close">Close</string>
+    <string name="import_midi_soon">Import MIDI — coming soon</string>
+    <string name="about_title">About Drummachi</string>
+    <!-- v5.1: About reescrito pelo Felipe (EN) — link GoFundMe clicável + Pix copiável + QR code -->
+    <string name="about_text">Hello, I\'m Felipe Hamachi. Musician, comedian and IT professional.<br/><br/>
+This is a project that started informally and became a passion.<br/><br/>
+Some features, like the mixer for each drum piece, were designed from the real needs of an active musician. Unlike the rigid product manufacturers out there, I live the music.<br/><br/>
+The really good electronic drum pedals would cost way too much. The ones that aren\'t so good aren\'t even worth trying. And the sad truth is, they don\'t try that hard…<br/><br/>
+I created a better, 100%% free solution for you, my musician friend — and I truly hope you can have hours of fun playing professionally or in your bedroom. It doesn\'t matter.<br/><br/>
+Please have fun, and consider donating 🥁<br/><br/>
+<b>Donate / Doações</b><br/>
+Your support keeps Drummachi alive and updated.<br/>
+With your help, I\'ll deliver:<br/>
+• MIDI integration for controller pedals.<br/>
+• Different drum kits (Jazz, Metal, Pop, Funk, etc.)<br/>
+• Sound improvements<br/>
+• Visual improvements to the user interface.<br/>
+• MIDI file import for your own grooves.<br/>
+• Other ideas that will naturally come up…<br/>
+If none of this convinces you to donate, just help me buy diapers for my baby 🙂<br/><br/>
+🌐 <b>GoFundMe</b><br/>
+Support the project on GoFundMe — any amount helps.<br/>
+<a href="%1$s">Donate on GoFundMe</a><br/><br/>
+💚 <b>Pix (Brasil)</b><br/>
+Chave Pix — copie e cole no app do seu banco.</string>
+    <string name="donate_link">https://www.gofundme.com/f/support-drummachi-the-totally-free-drum-machine-app</string>
+    <!-- v5.0: Pix Brasil (Felipe) -->
+    <string name="donate_pix">cf140122-91b2-4936-bea4-d5fc8bf16133</string>
+    <string name="donate_pix_label">Pix (Brasil)</string>
+
+    <!-- v5.1: About — ações do Pix -->
+    <string name="about_donate_button">🌐 Donate on GoFundMe</string>
+    <string name="about_pix_copy">COPIAR</string>
+    <string name="about_pix_copied">Chave Pix copiada!</string>
+    <string name="about_qr_hint">QR code Pix para doação — escaneie com o app do seu banco</string>
+
+    <!-- Parts -->
+    <string name="song_part">VERSE</string>
+
+    <!-- Botões -->
+    <string name="tap_tempo">TAP TEMPO</string>
+    <string name="play">PLAY</string>
+    <string name="stop">STOP</string>
+    <string name="fill">FILL</string>
+</resources>

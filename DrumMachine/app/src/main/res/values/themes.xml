@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <style name="Theme.Drummachi" parent="Theme.AppCompat.DayNight.NoActionBar">
+        <item name="colorPrimary">@color/play_grad_top</item>
+        <item name="colorAccent">@color/segment_active_top</item>
+        <item name="android:windowBackground">@color/bg_edge</item>
+        <item name="android:statusBarColor">@color/bg_edge</item>
+        <item name="android:navigationBarColor">@color/bg_edge</item>
+    </style>
+</resources>

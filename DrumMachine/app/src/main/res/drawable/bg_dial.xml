@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- v4.3 - Dial do TAP TEMPO: anel #38BDF8 translúcido + knob #475569 -> #1E293B -->
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <item>
+        <shape android:shape="oval">
+            <solid android:color="@android:color/transparent" />
+            <stroke
+                android:width="3dp"
+                android:color="@color/dial_ring" />
+        </shape>
+    </item>
+    <item
+        android:top="11dp"
+        android:bottom="11dp"
+        android:left="11dp"
+        android:right="11dp">
+        <shape android:shape="oval">
+            <gradient
+                android:angle="270"
+                android:startColor="@color/dial_knob_top"
+                android:endColor="@color/dial_knob_bottom" />
+        </shape>
+    </item>
+</layer-list>

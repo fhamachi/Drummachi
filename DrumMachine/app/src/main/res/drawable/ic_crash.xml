@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- v4.8: crash cymbal — prato estilizado em linhas finas -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="40dp"
+    android:height="40dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24">
+    <!-- prato (elipse) -->
+    <path
+        android:fillColor="#00000000"
+        android:strokeColor="#E2E8F0"
+        android:strokeWidth="1.2"
+        android:pathData="M12,6 C16.4,6 20,8.7 20,12 C20,15.3 16.4,18 12,18 C7.6,18 4,15.3 4,12 C4,8.7 7.6,6 12,6 Z" />
+    <!-- borda interna -->
+    <path
+        android:fillColor="#00000000"
+        android:strokeColor="#8B95A5"
+        android:strokeWidth="1"
+        android:pathData="M12,9 C14.2,9 16,10.3 16,12 C16,13.7 14.2,15 12,15 C9.8,15 8,13.7 8,12 C8,10.3 9.8,9 12,9 Z" />
+    <!-- centro (bell) -->
+    <path
+        android:fillColor="#E2E8F0"
+        android:pathData="M12,11.2 C12.6,11.2 13,11.6 13,12 C13,12.4 12.6,12.8 12,12.8 C11.4,12.8 11,12.4 11,12 C11,11.6 11.4,11.2 12,11.2 Z" />
+    <!-- raios -->
+    <path
+        android:strokeColor="#E2E8F0"
+        android:strokeWidth="1.2"
+        android:pathData="M12,3 L12,5 M12,19 L12,21 M3,12 L5,12 M19,12 L21,12 M6.4,6.4 L7.8,7.8 M16.2,16.2 L17.6,17.6 M17.6,6.4 L16.2,7.8 M7.8,16.2 L6.4,17.6" />
+</vector>

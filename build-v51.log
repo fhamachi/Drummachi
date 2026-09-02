@@ -1,0 +1,106 @@
++ export DEBIAN_FRONTEND=noninteractive
++ DEBIAN_FRONTEND=noninteractive
++ echo '=== [1/5] Instalando JDK 17 ==='
+=== [1/5] Instalando JDK 17 ===
++ apt-get update -qq
++ apt-get install -y -qq openjdk-17-jdk-headless wget unzip
++ export JAVA_HOME=/usr/lib/jvm/java-17-openjdk-arm64
++ JAVA_HOME=/usr/lib/jvm/java-17-openjdk-arm64
++ '[' '!' -d /usr/lib/jvm/java-17-openjdk-arm64 ']'
++ export PATH=/usr/lib/jvm/java-17-openjdk-arm64/bin:/usr/bin:/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/sbin:/data/data/com.termux/files/usr/bin
++ PATH=/usr/lib/jvm/java-17-openjdk-arm64/bin:/usr/bin:/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/sbin:/data/data/com.termux/files/usr/bin
++ java -version
+openjdk version "17.0.20" 2026-07-21
+OpenJDK Runtime Environment (build 17.0.20+8-1-26.04-Ubuntu)
+OpenJDK 64-Bit Server VM (build 17.0.20+8-1-26.04-Ubuntu, mixed mode, sharing)
++ echo '=== [2/5] Gradle 8.7 ==='
+=== [2/5] Gradle 8.7 ===
++ '[' '!' -d /opt/gradle-8.7 ']'
++ export PATH=/opt/gradle-8.7/bin:/usr/lib/jvm/java-17-openjdk-arm64/bin:/usr/bin:/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/sbin:/data/data/com.termux/files/usr/bin
++ PATH=/opt/gradle-8.7/bin:/usr/lib/jvm/java-17-openjdk-arm64/bin:/usr/bin:/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/sbin:/data/data/com.termux/files/usr/bin
++ gradle --version
++ head -8
+
+------------------------------------------------------------
+Gradle 8.7
+------------------------------------------------------------
+
+Build time:   2024-03-22 15:52:46 UTC
+Revision:     650af14d7653aa949fce5e886e685efc9cf97c10
+
++ echo '=== [3/5] Android SDK (cmdline-tools + platform 34 + build-tools 34.0.0) ==='
+=== [3/5] Android SDK (cmdline-tools + platform 34 + build-tools 34.0.0) ===
++ export ANDROID_HOME=/opt/android-sdk
++ ANDROID_HOME=/opt/android-sdk
++ mkdir -p /opt/android-sdk/cmdline-tools
++ '[' '!' -d /opt/android-sdk/cmdline-tools/latest ']'
++ yes
++ /opt/android-sdk/cmdline-tools/latest/bin/sdkmanager --sdk_root=/opt/android-sdk --licenses
++ tail -5
++ /opt/android-sdk/cmdline-tools/latest/bin/sdkmanager --sdk_root=/opt/android-sdk 'platforms;android-34' 'build-tools;34.0.0'
+Loading package information...                                                  Loading local repository...                                                     [                                       ] 3% Loading local repository...        [                                       ] 3% Fetch remote repository...         [=                                      ] 3% Fetch remote repository...         [=                                      ] 4% Fetch remote repository...         [=                                      ] 5% Fetch remote repository...         [==                                     ] 5% Fetch remote repository...         [==                                     ] 6% Fetch remote repository...         [==                                     ] 7% Fetch remote repository...         [==                                     ] 7% Computing updates...               [===                                    ] 8% Computing updates...               [===                                    ] 10% Computing updates...              [=======================================] 100% Computing updates...             
+
++ echo '=== [3.5/5] Testando aapt2 nativo ==='
+=== [3.5/5] Testando aapt2 nativo ===
++ /opt/android-sdk/build-tools/34.0.0/aapt2 version
+Android Asset Packaging Tool (aapt) 2.19-OS3.0.303.0.WNTMIXM
++ echo '=== [4/5] Gradle wrapper + assembleDebug ==='
+=== [4/5] Gradle wrapper + assembleDebug ===
++ cd /home/ubuntu/.openclaw/workspace/drummachi/DrumMachine
++ gradle wrapper --gradle-version 8.7
++ tail -3
+
+BUILD SUCCESSFUL in 8m 16s
+1 actionable task: 1 up-to-date
++ gradle assembleDebug --no-daemon
++ tail -40
+> Task :app:packageDebugResources
+> Task :app:parseDebugLocalResources
+> Task :app:createDebugCompatibleScreenManifests
+> Task :app:extractDeepLinksDebug UP-TO-DATE
+> Task :app:processDebugMainManifest
+> Task :app:processDebugManifest
+> Task :app:javaPreCompileDebug UP-TO-DATE
+> Task :app:mergeDebugShaders UP-TO-DATE
+> Task :app:compileDebugShaders NO-SOURCE
+> Task :app:processDebugManifestForPackage
+> Task :app:processDebugResources
+> Task :app:generateDebugAssets UP-TO-DATE
+> Task :app:mergeDebugAssets UP-TO-DATE
+> Task :app:compressDebugAssets UP-TO-DATE
+> Task :app:checkDebugDuplicateClasses UP-TO-DATE
+> Task :app:desugarDebugFileDependencies UP-TO-DATE
+> Task :app:mergeExtDexDebug UP-TO-DATE
+> Task :app:mergeLibDexDebug UP-TO-DATE
+> Task :app:compileDebugKotlin
+> Task :app:mergeDebugJniLibFolders UP-TO-DATE
+> Task :app:mergeDebugNativeLibs UP-TO-DATE
+> Task :app:stripDebugDebugSymbols UP-TO-DATE
+> Task :app:validateSigningDebug UP-TO-DATE
+> Task :app:writeDebugAppMetadata UP-TO-DATE
+> Task :app:writeDebugSigningConfigVersions UP-TO-DATE
+
+> Task :app:compileDebugKotlin
+w: file:///home/ubuntu/.openclaw/workspace/drummachi/DrumMachine/app/src/main/java/com/drummachi/MainActivity.kt:729:21 Variable 'y' is never used
+
+> Task :app:compileDebugJavaWithJavac NO-SOURCE
+> Task :app:processDebugJavaRes UP-TO-DATE
+> Task :app:mergeDebugJavaResource UP-TO-DATE
+> Task :app:dexBuilderDebug
+> Task :app:mergeProjectDexDebug
+> Task :app:packageDebug
+> Task :app:createDebugApkListingFileRedirect
+> Task :app:assembleDebug
+
+BUILD SUCCESSFUL in 25m 57s
+34 actionable tasks: 15 executed, 19 up-to-date
++ echo '=== [5/5] Resultado ==='
+=== [5/5] Resultado ===
++ ls -la app/build/outputs/apk/debug/
+total 5230
+drwxr-xr-x+  2 root root    3452 Aug 30 09:19 .
+drwxr-xr-x+  3 root root    3452 Aug 27 13:52 ..
+-rw-r--r--+  1 root root 5338279 Aug 30 09:19 app-debug.apk
+-rw-r--r--+  1 root root     369 Aug 30 09:19 output-metadata.json
++ echo BUILD_FIM
+BUILD_FIM
