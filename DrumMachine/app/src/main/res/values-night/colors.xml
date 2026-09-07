@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Drummachi v5 - Paleta DARK (tema escuro, o padrão original) -->
+<resources>
+    <!-- Fundo: gradiente radial #161C24 (centro) -> #0D1015 (bordas) -->
+    <color name="bg_center">#FF161C24</color>
+    <color name="bg_edge">#FF0D1015</color>
+    <color name="background_dark">#FF0D1015</color>
+    <color name="footer">#FF0D1015</color>
+
+    <!-- Texto -->
+    <color name="text_primary">#FFFFFFFF</color>
+    <color name="text_secondary">#FF8A94A6</color>
+    <color name="text_inactive">#FF475569</color>
+
+    <!-- Header: barra segmentada 1-4 -->
+    <color name="segment_container">#FF0D1527</color>
+    <color name="segment_active_top">#FF2B529A</color>
+    <color name="segment_active_bottom">#FF1A3668</color>
+    <color name="segment_active_border">#FF3B82F6</color>
+    <color name="segment_divider">#FF1E293B</color>
+
+    <!-- Card TAP TEMPO -->
+    <color name="tap_grad_top">#FF1E293B</color>
+    <color name="tap_grad_bottom">#FF0F172A</color>
+    <color name="tap_border">#FF2A364F</color>
+    <color name="tap_pressed">#FF141E2E</color>
+    <color name="dial_ring">#6638BDF8</color>
+    <color name="dial_knob_top">#FF475569</color>
+    <color name="dial_knob_bottom">#FF1E293B</color>
+
+    <!-- Card VERSO / CRASH -->
+    <color name="part_grad_top">#FF1B283D</color>
+    <color name="part_grad_bottom">#FF0E1626</color>
+    <color name="part_border">#FF23334D</color>
+    <color name="part_pressed">#FF0F1928</color>
+    <color name="part_icon">#FFCBD5E1</color>
+    <color name="part_line">#FF26354A</color>
+
+    <!-- Card PLAY (ação principal) -->
+    <color name="play_bevel">#FF10B981</color>
+    <color name="play_grad_top">#FF059669</color>
+    <color name="play_grad_center">#FF064E3B</color>
+    <color name="play_grad_bottom">#FF022C22</color>
+    <color name="play_pressed">#FF033B2C</color>
+    <color name="play_icon">#FFA7F3D0</color>
+
+    <!-- Card FILL -->
+    <color name="fill_grad_top">#FF25285A</color>
+    <color name="fill_grad_mid">#FF1E2348</color>
+    <color name="fill_grad_bottom">#FF0F1226</color>
+    <color name="fill_border">#FF313668</color>
+    <color name="fill_pressed">#FF161936</color>
+    <color name="fill_icon">#FFE2E8F0</color>
+
+    <!-- glow do FILL ativo (azul claro) -->
+    <color name="fill_glow">#6638BDF8</color>
+
+    <!-- slider BPM -->
+    <color name="slider_track">#FF1E293B</color>
+    <color name="slider_fill">#FF38BDF8</color>
+    <color name="slider_knob">#FFE2E8F0</color>
+    <color name="slider_knob_border">#FF38BDF8</color>
+    <color name="text_muted">#FF8B95A5</color>
+    <!-- v5.x: estrela de favorito ativa (dourado) -->
+    <color name="fav_active">#FFF5A623</color>
+</resources>

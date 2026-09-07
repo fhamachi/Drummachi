@@ -13,6 +13,17 @@
     <string name="menu_import_midi">Import MIDI</string>
     <string name="menu_about">About</string>
     <string name="menu_close">Close</string>
+    <string name="menu_theme">Theme</string>
+    <string name="theme_light">Light</string>
+    <string name="theme_dark">Dark</string>
+    <string name="theme_system">System</string>
+    <!-- v5.x: favorites (loop library) -->
+    <string name="menu_favorites">Favorites</string>
+    <string name="fav_toggle">Mark rhythm as favorite</string>
+    <string name="fav_added">Added to favorites</string>
+    <string name="fav_removed">Removed from favorites</string>
+    <string name="fav_empty">No favorites yet</string>
+    <string name="fav_count">Favorite %1$d/%2$d — %3$s</string>
     <string name="import_midi_soon">Import MIDI — coming soon</string>
     <string name="about_title">About Drummachi</string>
     <!-- v5.1: About reescrito pelo Felipe (EN) — link GoFundMe clicável + Pix copiável + QR code -->
@@ -22,7 +33,7 @@ Some features, like the mixer for each drum piece, were designed from the real n
 The really good electronic drum pedals would cost way too much. The ones that aren\'t so good aren\'t even worth trying. And the sad truth is, they don\'t try that hard…<br/><br/>
 I created a better, 100%% free solution for you, my musician friend — and I truly hope you can have hours of fun playing professionally or in your bedroom. It doesn\'t matter.<br/><br/>
 Please have fun, and consider donating 🥁<br/><br/>
-<b>Donate / Doações</b><br/>
+<b>Donate / Donations</b><br/>
 Your support keeps Drummachi alive and updated.<br/>
 With your help, I\'ll deliver:<br/>
 • MIDI integration for controller pedals.<br/>
@@ -35,18 +46,18 @@ If none of this convinces you to donate, just help me buy diapers for my baby �
 🌐 <b>GoFundMe</b><br/>
 Support the project on GoFundMe — any amount helps.<br/>
 <a href="%1$s">Donate on GoFundMe</a><br/><br/>
-💚 <b>Pix (Brasil)</b><br/>
-Chave Pix — copie e cole no app do seu banco.</string>
+💚 <b>Pix (Brazil)</b><br/>
+Pix key — copy and paste it in your bank\'s app.</string>
     <string name="donate_link">https://www.gofundme.com/f/support-drummachi-the-totally-free-drum-machine-app</string>
     <!-- v5.0: Pix Brasil (Felipe) -->
     <string name="donate_pix">cf140122-91b2-4936-bea4-d5fc8bf16133</string>
-    <string name="donate_pix_label">Pix (Brasil)</string>
+    <string name="donate_pix_label">Pix (Brazil)</string>
 
-    <!-- v5.1: About — ações do Pix -->
+    <!-- v5.1: About — Pix actions -->
     <string name="about_donate_button">🌐 Donate on GoFundMe</string>
-    <string name="about_pix_copy">COPIAR</string>
-    <string name="about_pix_copied">Chave Pix copiada!</string>
-    <string name="about_qr_hint">QR code Pix para doação — escaneie com o app do seu banco</string>
+    <string name="about_pix_copy">COPY</string>
+    <string name="about_pix_copied">Pix key copied!</string>
+    <string name="about_qr_hint">Pix QR code for donation — scan it with your bank\'s app</string>
 
     <!-- Parts -->
     <string name="song_part">VERSE</string>

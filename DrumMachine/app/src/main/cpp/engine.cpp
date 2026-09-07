@@ -49,6 +49,89 @@ static std::atomic<float> g_gains[7] = {1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f
 // v4.7: TONE por peça — 0.0 (natural) .. 1.0 (mais agudo). Filtro passa-alta 1ª ordem.
 static std::atomic<float> g_tones[7] = {0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f};
 
+// ---------------------------------------------------------------------------
+// v5.5: REVERB master (Freeverb-lite, mono). Processa no bus master, DEPOIS do
+// mix das vozes e ANTES do ganho mestre. Dois parâmetros globais expostos ao
+// mixer: LEVEL (dry/wet mix) e TIME (decay). LEVEL=0 => bypass total (áudio
+// idêntico ao de sempre), fast-path sem custo nenhum.
+// ---------------------------------------------------------------------------
+static std::atomic<float> g_reverbMix{0.0f};    // 0.0 = só seco .. 1.0 = cheio
+static std::atomic<float> g_reverbTime{0.75f};  // 0.0 = cauda curta .. 1.0 = longa
+
+static constexpr int kCombCount = 8;
+static constexpr int kAllpassCount = 4;
+static constexpr int kCombBufSize = 2048;    // > tap máx 1617 (48k cobre com folga)
+static constexpr int kAllpassBufSize = 1024; // > tap máx 556
+static const int kCombTaps[kCombCount] = {1116, 1188, 1277, 1356,
+                                          1422, 1491, 1557, 1617};
+static const int kAllpassTaps[kAllpassCount] = {556, 441, 341, 225};
+
+struct CombState {
+    float buf[kCombBufSize];
+    int head;
+    int tap;
+    float filter; // saída do lowpass de damping
+};
+struct AllpassState {
+    float buf[kAllpassBufSize];
+    int head;
+    int tap;
+};
+static CombState g_combs[kCombCount];
+static AllpassState g_allpasses[kAllpassCount];
+
+static void initReverb() {
+    for (int i = 0; i < kCombCount; i++) {
+        memset(g_combs[i].buf, 0, sizeof(g_combs[i].buf));
+        g_combs[i].head = 0;
+        g_combs[i].tap = kCombTaps[i];
+        g_combs[i].filter = 0.0f;
+    }
+    for (int i = 0; i < kAllpassCount; i++) {
+        memset(g_allpasses[i].buf, 0, sizeof(g_allpasses[i].buf));
+        g_allpasses[i].head = 0;
+        g_allpasses[i].tap = kAllpassTaps[i];
+    }
+}
+
+// v5.5: comb com damping (lowpass 1ª ordem, coef. fixo) p/ cauda natural.
+static float reverbCombProcess(CombState &c, float in, float fb) {
+    int readIdx = c.head - c.tap;
+    if (readIdx < 0) readIdx += kCombBufSize;
+    const float out = c.buf[readIdx];
+    c.filter = out * 0.75f + c.filter * 0.25f; // damping
+    c.buf[c.head] = in + c.filter * fb;
+    if (++c.head >= kCombBufSize) c.head = 0;
+    return out;
+}
+
+static float reverbAllpassProcess(AllpassState &a, float in) {
+    int readIdx = a.head - a.tap;
+    if (readIdx < 0) readIdx += kAllpassBufSize;
+    const float bufout = a.buf[readIdx];
+    const float out = -in + bufout;
+    a.buf[a.head] = in + bufout * 0.5f;
+    if (++a.head >= kAllpassBufSize) a.head = 0;
+    return out;
+}
+
+// v5.5: processa um frame mono -> sinal wet (cauda).
+static float reverbProcess(float in, float fb) {
+    float sum = 0.0f;
+    for (int i = 0; i < kCombCount; i++) sum += reverbCombProcess(g_combs[i], in, fb);
+    sum *= 0.35f; // Freeverb scale
+    for (int i = 0; i < kAllpassCount; i++) sum = reverbAllpassProcess(g_allpasses[i], sum);
+    return sum;
+}
+
+// v5.5: TIME 0..1 -> feedback 0.50 (curto) .. 0.95 (longo).
+static float reverbFeedbackFromTime(float time) {
+    float t = time;
+    if (t < 0.0f) t = 0.0f;
+    if (t > 1.0f) t = 1.0f;
+    return 0.50f + 0.45f * t;
+}
+
 static void renderKick() {
     const double startFreq = 150.0, endFreq = 50.0;
     const double sweepSamples = g_sampleRate * 0.1;
@@ -369,6 +452,10 @@ public:
         // v4.7: coeficientes do filtro de TONE (lidos uma vez por callback)
         float alpha[7];
         for (int s = 0; s < 7; s++) alpha[s] = toneAlpha(g_tones[s].load(), g_sampleRate);
+        // v5.5: reverb master — params lidos 1x/callback; feedback deriva do TIME
+        const float rvMix = g_reverbMix.load();
+        const bool rvOn = rvMix > 0.0001f;
+        const float rvFB = reverbFeedbackFromTime(g_reverbTime.load());
         for (int i = 0; i < numFrames; i++) {
             float sample = 0.0f;
             for (auto &v : g_voices) {
@@ -397,7 +484,15 @@ public:
             }
             if (sample > 1.0f) sample = 1.0f;
             else if (sample < -1.0f) sample = -1.0f;
-            out[i] = sample * 0.9f; // ganho mestre
+            float s = sample;
+            if (rvOn) {
+                // v5.5: reverb master — dry atenua levemente p/ o mix não estourar
+                const float wet = reverbProcess(sample, rvFB);
+                s = sample * (1.0f - 0.6f * rvMix) + wet * rvMix;
+                if (s > 1.0f) s = 1.0f;
+                else if (s < -1.0f) s = -1.0f;
+            }
+            out[i] = s * 0.9f; // ganho mestre
         }
 
         g_framesWritten = bufferEnd;
@@ -456,6 +551,7 @@ static bool openStreamLocked() {
     if (g_framesPerBurst <= 0) g_framesPerBurst = 192;
     renderSounds();       // renderiza na taxa real do stream
     initPatterns();       // v4.9: garante padrões iniciais (velocity arrays)
+    initReverb();         // v5.5: garante buffers limpos no (re)open do stream
 
     LOGI("Oboe OK: rate=%d ch=%d burst=%d perf=%d sharing=%d",
          g_sampleRate, g_stream->getChannelCount(), g_framesPerBurst,
@@ -519,6 +615,7 @@ Java_com_drummachi_DrumEngine_nativeStart(JNIEnv *, jobject) {
     std::lock_guard<std::mutex> lock(g_streamMutex);
     if (!openStreamLocked()) return;
     clearVoices();
+    initReverb(); // v5.5: limpa cauda residual ao (re)iniciar
     g_sched = SchedState();
     const int64_t preRoll = static_cast<int64_t>(g_framesPerBurst) * 2;
     g_sched.nextStepFrame = g_framesWritten + preRoll;
@@ -702,6 +799,24 @@ Java_com_drummachi_DrumEngine_nativeSetTone(JNIEnv *, jobject, jint soundId,
     if (t < 0.0f) t = 0.0f;
     if (t > 1.0f) t = 1.0f;
     g_tones[soundId].store(t);
+}
+
+// v5.5: reverb LEVEL (dry/wet mix 0..1; 0 = bypass)
+JNIEXPORT void JNICALL
+Java_com_drummachi_DrumEngine_nativeSetReverbLevel(JNIEnv *, jobject, jfloat level) {
+    float v = level;
+    if (v < 0.0f) v = 0.0f;
+    if (v > 1.0f) v = 1.0f;
+    g_reverbMix.store(v);
+}
+
+// v5.5: reverb TIME (cauda/decay 0..1; default 0.75)
+JNIEXPORT void JNICALL
+Java_com_drummachi_DrumEngine_nativeSetReverbTime(JNIEnv *, jobject, jfloat time) {
+    float v = time;
+    if (v < 0.0f) v = 0.0f;
+    if (v > 1.0f) v = 1.0f;
+    g_reverbTime.store(v);
 }
 
 // v4.4: registra o listener de fill (Kotlin: onFillChanged(boolean)).

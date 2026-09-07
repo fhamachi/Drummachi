@@ -12,6 +12,7 @@ import android.os.Bundle
 import android.text.Html
 import android.text.method.LinkMovementMethod
 import android.util.Log
+import android.view.GestureDetector
 import android.view.LayoutInflater
 import android.view.MotionEvent
 import android.view.View
@@ -25,6 +26,7 @@ import android.widget.SeekBar
 import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import androidx.appcompat.app.AppCompatDelegate
 import androidx.core.content.ContextCompat
 import org.json.JSONArray
 import org.json.JSONObject
@@ -76,6 +78,9 @@ class MainActivity : AppCompatActivity(),
     private var lastTapTime: Long = 0
     private val tapIntervals = mutableListOf<Long>()
 
+    // v5.x: preferência de tema (shared prefs)
+    private lateinit var themePrefs: android.content.SharedPreferences
+
     private lateinit var drumEngine: DrumEngine
     private lateinit var beatSequencer: BeatSequencer
 
@@ -103,8 +108,25 @@ class MainActivity : AppCompatActivity(),
     private var mixerTwoFinger = false
     private var mixerOpen = false
 
+    // v5.x: favoritos (biblioteca de loops) + gesto de swipe
+    private lateinit var favButton: ImageView
+    private lateinit var favoritesPrefs: android.content.SharedPreferences
+    private val favoriteKeys = mutableListOf<String>() // chaves "estilo|nome", ordenadas
+    private val rhythmByKey = LinkedHashMap<String, Rhythm>()
+    private var currentRhythm: Rhythm? = null
+    private var currentStyleKey: String? = null
+
+    // v5.x: swipe de favoritos (região dos 5 botões principais)
+    private lateinit var gestureDetector: GestureDetector
+    private var headerEndPx = 0f
+    private var footerPx = 0f
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        // ---- v5.x: aplica o tema escolhido ANTES de inflar a view ----
+        themePrefs = getSharedPreferences("drummachi_theme", Context.MODE_PRIVATE)
+        applySavedTheme()
 
         // ---- Diagnóstico v4.2: captura qualquer erro e mostra na tela ----
         val crashFile = File(filesDir, "drummachi_crash.log")
@@ -159,6 +181,7 @@ class MainActivity : AppCompatActivity(),
         bpmLabel = findViewById(R.id.bpmLabel)
         bpmSlider = findViewById(R.id.bpmSlider)
         styleValue = findViewById(R.id.styleValue)
+        favButton = findViewById(R.id.favButton)
         playButton = findViewById(R.id.playButton)
         playFlash = findViewById(R.id.playFlash)
         playText = findViewById(R.id.playText)
@@ -178,18 +201,23 @@ class MainActivity : AppCompatActivity(),
         // Listeners
         findViewById<View>(R.id.btnMenu).setOnClickListener { onMenuClicked() }
         findViewById<View>(R.id.tapTempoButton).setOnClickListener { onTapTempoClicked() }
-        // v4.8: botão CRASH — toca o crash cymbal imediatamente (one-shot)
-        findViewById<View>(R.id.crashButton).setOnClickListener {
-            drumEngine.playOneShot(DrumEngine.SOUND_CRASH)
-        }
+        // v5.x: botão CRASH — toca o crash mesmo com a máquina parada
+        findViewById<View>(R.id.crashButton).setOnClickListener { onCrashClicked() }
         songPartButton.setOnClickListener { onSongPartClicked() }
         playButton.setOnClickListener { onPlayClicked() }
         findViewById<View>(R.id.fillButton).setOnClickListener { onFillClicked() }
+        favButton.setOnClickListener { onFavClicked() }
         // v4.4: o contador 1-4 NÃO é clicável — é um mostrador (sem listeners).
 
         // Carrega os 12 ritmos (assets/styles) e aplica o padrão inicial
         styleGroups = loadStyles()
         styleGroups.firstOrNull()?.ritmos?.firstOrNull()?.let { applyStyle(it) }
+
+        // v5.x: favoritos (índice + persistência) e gesto de swipe
+        buildRhythmIndex()
+        favoritesPrefs = getSharedPreferences("drummachi_favorites", Context.MODE_PRIVATE)
+        loadFavorites()
+        initGesture()
 
         // v4.7: mixer de volume/tone por peça (painel lateral, gesto de 2 dedos)
         setupMixer()
@@ -209,7 +237,9 @@ class MainActivity : AppCompatActivity(),
     private fun onMenuClicked() {
         val items = arrayOf(
             getString(R.string.menu_styles),
+            getString(R.string.menu_favorites),
             getString(R.string.menu_import_midi),
+            getString(R.string.menu_theme),
             getString(R.string.menu_about),
             getString(R.string.menu_close)
         )
@@ -218,17 +248,46 @@ class MainActivity : AppCompatActivity(),
             .setItems(items) { _, which ->
                 when (which) {
                     0 -> showStylesDialog()
-                    1 -> Toast.makeText(this, R.string.import_midi_soon, Toast.LENGTH_SHORT).show()
-                    2 -> showAboutDialog()
+                    1 -> showFavoritesDialog()
+                    2 -> Toast.makeText(this, R.string.import_midi_soon, Toast.LENGTH_SHORT).show()
+                    3 -> showThemeDialog()
+                    4 -> showAboutDialog()
                 }
             }
             .show()
     }
 
+    /** Submenu Tema: Claro / Escuro / Automático (segue o sistema). */
+    private fun showThemeDialog() {
+        val items = arrayOf(
+            getString(R.string.theme_light),
+            getString(R.string.theme_dark),
+            getString(R.string.theme_system)
+        )
+        AlertDialog.Builder(this)
+            .setTitle(R.string.menu_theme)
+            .setItems(items) { _, which ->
+                val mode = when (which) {
+                    0 -> AppCompatDelegate.MODE_NIGHT_NO      // Claro
+                    1 -> AppCompatDelegate.MODE_NIGHT_YES     // Escuro
+                    else -> AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM // Automático
+                }
+                themePrefs.edit().putInt("theme_mode", mode).apply()
+                AppCompatDelegate.setDefaultNightMode(mode)
+            }
+            .show()
+    }
+
+    /** Aplica o modo de tema salvo (default: DARK, como antes da v5). */
+    private fun applySavedTheme() {
+        val saved = themePrefs.getInt("theme_mode", AppCompatDelegate.MODE_NIGHT_YES)
+        AppCompatDelegate.setDefaultNightMode(saved)
+    }
+
     /** Submenu Styles: 12 ritmos agrupados por estilo (Rock/Pop/Blues/Latino). */
     private fun showStylesDialog() {
         if (styleGroups.isEmpty()) {
-            Toast.makeText(this, "Estilos não encontrados (assets/styles)", Toast.LENGTH_SHORT).show()
+            Toast.makeText(this, "Styles not found (assets/styles)", Toast.LENGTH_SHORT).show()
             return
         }
         val labels = mutableListOf<String>()
@@ -328,6 +387,13 @@ class MainActivity : AppCompatActivity(),
         val (steps, beats) = parseCompasso(r.compasso)
         drumEngine.setTimeSignature(steps, beats)
         buildCounter(beats)
+        // v5.x: guarda o ritmo ativo para a funcionalidade de favoritos
+        currentRhythm = r
+        currentStyleKey = null
+        for (g in styleGroups) for (rr in g.ritmos) {
+            if (rr === r) currentStyleKey = "${g.estilo}|${rr.nome}"
+        }
+        updateFavButton()
     }
 
     /** v5.0: "6/8" → (12 passos, 6 batidas); "4/4" → (16, 4); default 4/4. */
@@ -392,9 +458,27 @@ class MainActivity : AppCompatActivity(),
         return Pair(ByteArray(0), sampleRate)
     }
 
+    /**
+     * v5.4: reabre o stream (se necessário) e recarrega os samples WAV antes de
+     * iniciar o loop. Uma troca de dispositivo de áudio (ex.: desconectar um
+     * fone Bluetooth) faz o Oboe fechar o stream e, ao reabri-lo, o engine
+     * regenera os sons sintéticos (renderSounds) no lugar dos WAV — que só são
+     * recarregados aqui. Chamar com o stream PARADO (não há callback lendo os
+     * samples durante o carregamento), evitando corrida.
+     */
+    private fun ensureSamplesLoaded(): Boolean {
+        if (!drumEngine.open()) return false
+        loadKitSamples()
+        return true
+    }
+
     private fun onPlayClicked() {
         if (!isPlaying) {
             try {
+                if (!ensureSamplesLoaded()) {
+                    Toast.makeText(this, "Failed to open audio (native stream)", Toast.LENGTH_LONG).show()
+                    return
+                }
                 beatSequencer.start()
                 if (!beatSequencer.isRunning()) {
                     Toast.makeText(this, "Failed to start audio (native stream)", Toast.LENGTH_LONG).show()
@@ -418,6 +502,27 @@ class MainActivity : AppCompatActivity(),
         if (isPlaying) {
             beatSequencer.queueFill()
             setFillGlow(true) // feedback imediato; o callback nativo apaga no fim
+        } else {
+            // v5.x: máquina parada — FILL inicia a música: faz o fill e entra
+            // no loop normal (play) em seguida.
+            try {
+                if (!ensureSamplesLoaded()) {
+                    Toast.makeText(this, "Failed to open audio (native stream)", Toast.LENGTH_LONG).show()
+                    return
+                }
+                beatSequencer.start()
+                if (!beatSequencer.isRunning()) {
+                    Toast.makeText(this, "Failed to start audio (native stream)", Toast.LENGTH_LONG).show()
+                    return
+                }
+            } catch (t: Throwable) {
+                Toast.makeText(this, "Error: ${t.message}", Toast.LENGTH_LONG).show()
+                return
+            }
+            playText.text = getString(R.string.stop)
+            isPlaying = true
+            beatSequencer.queueFill()
+            setFillGlow(true)
         }
     }
 
@@ -627,13 +732,17 @@ class MainActivity : AppCompatActivity(),
                     or View.SYSTEM_UI_FLAG_FULLSCREEN
                     or View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
                 )
+            // v5.x: limites da região dos 5 botões para o swipe de favoritos
+            val root = findViewById<View>(android.R.id.content)
+            headerEndPx = root.height * 0.18f
+            footerPx = root.height * 0.94f
         }
     }
 
     override fun onDestroy() {
         super.onDestroy()
-        beatSequencer.stop()
-        drumEngine.release()
+        if (::beatSequencer.isInitialized) beatSequencer.stop()
+        if (::drumEngine.isInitialized) drumEngine.release()
     }
 
     // ========== v4.7: MIXER (volume/tone por peça, gesto de 2 dedos) ==========
@@ -691,6 +800,34 @@ class MainActivity : AppCompatActivity(),
             })
             mixerRows += MixerRow(pair.first, pair.second, volSb, toneSb)
         }
+
+        // v5.5: REVERB global — LEVEL (dry/wet) + TIME (decay), persistidos em drummachi_mixer
+        val reverbRow = findViewById<View>(R.id.mixerReverb)
+        val rvLevelSb = reverbRow.findViewById<SeekBar>(R.id.mixerReverbLevel)
+        val rvTimeSb = reverbRow.findViewById<SeekBar>(R.id.mixerReverbTime)
+        val rvLevel = prefs.getInt("reverb_level", 0)
+        val rvTime = prefs.getInt("reverb_time", 75)
+        rvLevelSb.progress = rvLevel
+        rvTimeSb.progress = rvTime
+        drumEngine.setReverbLevel(rvLevel / 100f)
+        drumEngine.setReverbTime(rvTime / 100f)
+        rvLevelSb.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
+            override fun onProgressChanged(sb: SeekBar?, p: Int, fromUser: Boolean) {
+                drumEngine.setReverbLevel(p / 100f)
+                prefs.edit().putInt("reverb_level", p).apply()
+            }
+            override fun onStartTrackingTouch(sb: SeekBar?) {}
+            override fun onStopTrackingTouch(sb: SeekBar?) {}
+        })
+        rvTimeSb.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
+            override fun onProgressChanged(sb: SeekBar?, p: Int, fromUser: Boolean) {
+                drumEngine.setReverbTime(p / 100f)
+                prefs.edit().putInt("reverb_time", p).apply()
+            }
+            override fun onStartTrackingTouch(sb: SeekBar?) {}
+            override fun onStopTrackingTouch(sb: SeekBar?) {}
+        })
+
         // Painel começa fechado
         mixerPanel.visibility = View.GONE
     }
@@ -711,6 +848,8 @@ class MainActivity : AppCompatActivity(),
 
     /** Gesto: 2 dedos deslizando para a ESQUERDA abre o mixer; para a DIREITA fecha. */
     override fun dispatchTouchEvent(ev: MotionEvent): Boolean {
+        // v5.x: alimenta o detector de swipe de favoritos (observa, não consome)
+        if (::gestureDetector.isInitialized) gestureDetector.onTouchEvent(ev)
         if (::mixerPanel.isInitialized) {
             when (ev.actionMasked) {
                 MotionEvent.ACTION_POINTER_DOWN -> {
@@ -737,7 +876,6 @@ class MainActivity : AppCompatActivity(),
             // Toque simples fora do painel fecha o mixer
             if (mixerOpen && ev.actionMasked == MotionEvent.ACTION_DOWN && ev.pointerCount == 1) {
                 val x = ev.x
-                val y = ev.y
                 val loc = IntArray(2)
                 mixerPanel.getLocationOnScreen(loc)
                 if (x < loc[0]) {
@@ -747,5 +885,125 @@ class MainActivity : AppCompatActivity(),
             }
         }
         return super.dispatchTouchEvent(ev)
+    }
+
+    // ========== v5.x: FAVORITOS (biblioteca de loops) ==========
+
+    /** Índice "estilo|nome" → Rhythm, para resolver favoritos rapidamente. */
+    private fun buildRhythmIndex() {
+        rhythmByKey.clear()
+        for (g in styleGroups) for (r in g.ritmos) {
+            rhythmByKey["${g.estilo}|${r.nome}"] = r
+        }
+    }
+
+    private fun loadFavorites() {
+        favoriteKeys.clear()
+        try {
+            val arr = JSONArray(favoritesPrefs.getString("favorites", "[]") ?: "[]")
+            for (i in 0 until arr.length()) {
+                val k = arr.optString(i)
+                if (k.isNotBlank() && rhythmByKey.containsKey(k)) favoriteKeys += k
+            }
+        } catch (_: Exception) {
+        }
+        favoriteKeys.sort()
+    }
+
+    private fun saveFavorites() {
+        val arr = JSONArray()
+        favoriteKeys.forEach { arr.put(it) }
+        favoritesPrefs.edit().putString("favorites", arr.toString()).apply()
+    }
+
+    private fun initGesture() {
+        gestureDetector = GestureDetector(this, object : GestureDetector.SimpleOnGestureListener() {
+            override fun onFling(e1: MotionEvent?, e2: MotionEvent, vx: Float, vy: Float): Boolean {
+                if (e1 == null) return false
+                val dx = e2.x - e1.x
+                val dy = e2.y - e1.y
+                if (Math.abs(dx) < Math.abs(dy) * 1.2f) return false // exige dominância horizontal
+                if (Math.abs(vx) < 600f) return false
+                if (mixerTwoFinger || mixerOpen) return false
+                if (headerEndPx > 0f && (e1.y < headerEndPx || e1.y > footerPx)) return false
+                if (dx > 0) nextFavorite() else previousFavorite()
+                return true
+            }
+        })
+    }
+
+    private fun onFavClicked() {
+        val key = currentStyleKey ?: return
+        if (key in favoriteKeys) {
+            favoriteKeys.remove(key)
+            saveFavorites()
+            Toast.makeText(this, R.string.fav_removed, Toast.LENGTH_SHORT).show()
+        } else {
+            favoriteKeys += key
+            favoriteKeys.sort()
+            saveFavorites()
+            Toast.makeText(this, R.string.fav_added, Toast.LENGTH_SHORT).show()
+        }
+        updateFavButton()
+    }
+
+    private fun updateFavButton() {
+        if (!::favButton.isInitialized) return
+        val key = currentStyleKey
+        val isFav = key != null && key in favoriteKeys
+        if (isFav) {
+            favButton.setImageResource(R.drawable.ic_star_filled)
+            favButton.setColorFilter(ContextCompat.getColor(this, R.color.fav_active))
+        } else {
+            favButton.setImageResource(R.drawable.ic_star_outline)
+            favButton.setColorFilter(ContextCompat.getColor(this, R.color.text_secondary))
+        }
+    }
+
+    private fun showFavoritesDialog() {
+        if (favoriteKeys.isEmpty()) {
+            Toast.makeText(this, R.string.fav_empty, Toast.LENGTH_SHORT).show()
+            return
+        }
+        val labels = favoriteKeys.map { key ->
+            val r = rhythmByKey[key]!!
+            "${key.substringBefore("|")} — ${r.nome} · ${r.bpm} BPM"
+        }
+        AlertDialog.Builder(this)
+            .setTitle(R.string.menu_favorites)
+            .setItems(labels.toTypedArray()) { _, which ->
+                rhythmByKey[favoriteKeys[which]]?.let { applyStyle(it) }
+            }
+            .setNegativeButton(R.string.menu_close, null)
+            .show()
+    }
+
+    private fun nextFavorite() = cycleFavorite(1)
+    private fun previousFavorite() = cycleFavorite(-1)
+
+    private fun cycleFavorite(dir: Int) {
+        if (favoriteKeys.isEmpty()) {
+            Toast.makeText(this, R.string.fav_empty, Toast.LENGTH_SHORT).show()
+            return
+        }
+        val n = favoriteKeys.size
+        val idx = currentStyleKey?.let { favoriteKeys.indexOf(it) } ?: -1
+        val newIdx = when {
+            idx < 0 -> if (dir > 0) 0 else n - 1
+            else -> (idx + dir + n) % n
+        }
+        val r = rhythmByKey[favoriteKeys[newIdx]] ?: return
+        applyStyle(r)
+        Toast.makeText(
+            this,
+            getString(R.string.fav_count, newIdx + 1, n, r.nome),
+            Toast.LENGTH_SHORT
+        ).show()
+    }
+
+    // v5.3: o crash toca imediatamente (one-shot). Só funciona com o stream
+    // rodando (máquina tocando) — o engine nativo é que controla isso.
+    private fun onCrashClicked() {
+        drumEngine.playOneShot(DrumEngine.SOUND_CRASH)
     }
 }

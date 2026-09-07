@@ -112,6 +112,16 @@ class DrumEngine {
     fun setTone(soundId: Int, tone: Float) = nativeSetTone(soundId, tone)
 
     /**
+     * v5.5: REVERB master — nível de mix dry/wet. 0.0 = só seco (bypass), 1.0 = cheio.
+     */
+    fun setReverbLevel(level: Float) = nativeSetReverbLevel(level.coerceIn(0f, 1f))
+
+    /**
+     * v5.5: REVERB master — tempo de cauda (decay). 0.0 = curto, 1.0 = longo. Default 0.75.
+     */
+    fun setReverbTime(time: Float) = nativeSetReverbTime(time.coerceIn(0f, 1f))
+
+    /**
      * v4.8: dispara um som imediatamente (one-shot, ex.: crash cymbal).
      */
     fun playOneShot(soundId: Int) = nativePlayOneShot(soundId)
@@ -135,6 +145,8 @@ class DrumEngine {
     private external fun nativeLoadSample(soundId: Int, pcm16: ByteArray, sampleRate: Int)
     private external fun nativeSetGain(soundId: Int, gain: Float)
     private external fun nativeSetTone(soundId: Int, tone: Float)
+    private external fun nativeSetReverbLevel(level: Float)
+    private external fun nativeSetReverbTime(time: Float)
     private external fun nativePlayOneShot(soundId: Int)
     private external fun nativeSetFillListener(listener: FillListener?)
     private external fun nativeSetCrashLogPath(path: String?)

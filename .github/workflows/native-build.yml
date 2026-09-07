@@ -1,0 +1,66 @@
+name: Native .so build
+
+# v5.5: reconstrução do libdrummachi.so a partir do engine.cpp (x86_64), com o
+# reverb. Disparo MANUAL — rode sempre que o engine.cpp mudar. Ao final, commita
+# o .so novo em app/src/main/jniLibs/arm64-v8a/ (aí os builds locais/release usam).
+# Só o job de .so: NÃO precisa dos secrets de keystore do release.
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build-native-lib:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    defaults:
+      run:
+        working-directory: DrumMachine
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Install NDK + cmake
+        run: |
+          yes | sdkmanager --licenses >/dev/null 2>&1 || true
+          sdkmanager "ndk;26.1.10909125" "cmake;3.22.1" "platforms;android-34" >/dev/null
+
+      - name: Build libdrummachi.so from engine.cpp (v5.5 reverb)
+        run: ./gradlew -PbuildNative=1 :app:assembleDebug --no-daemon
+
+      - name: Copy built .so into jniLibs
+        run: |
+          SO="$(find app/build -path '*arm64-v8a/libdrummachi.so' | grep -i merged | head -1)"
+          [ -n "$SO" ] || SO="$(find app/build -name libdrummachi.so | grep arm64-v8a | head -1)"
+          [ -n "$SO" ] || { echo "libdrummachi.so não gerado"; exit 1; }
+          mkdir -p app/src/main/jniLibs/arm64-v8a
+          cp -f "$SO" app/src/main/jniLibs/arm64-v8a/libdrummachi.so
+          echo "gerado a partir de: $SO"
+
+      - name: Verify native lib
+        run: |
+          readelf_sh="$(ls "$ANDROID_HOME"/ndk/*/toolchains/llvm/prebuilt/linux-x86_64/bin/llvm-readelf | tail -1)"
+          "$readelf_sh" -Ws app/src/main/jniLibs/arm64-v8a/libdrummachi.so | \
+            grep nativeSetReverbLevel >/dev/null || { echo "sem nativeSetReverbLevel"; exit 1; }
+          "$readelf_sh" -Ws app/src/main/jniLibs/arm64-v8a/libdrummachi.so | \
+            grep nativeSetReverbTime >/dev/null || { echo "sem nativeSetReverbTime"; exit 1; }
+          echo "reverb symbols OK"
+
+      - name: Commit rebuilt .so
+        uses: stefanzweifel/git-auto-commit-action@v5
+        with:
+          commit_message: "ci: rebuild libdrummachi.so (v5.5 reverb level+time)"
+          file_pattern: "app/src/main/jniLibs/**/*.so"
+          commit_user_name: github-actions[bot]
+          commit_user_email: 41898282+github-actions[bot]@users.noreply.github.com

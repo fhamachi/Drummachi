@@ -26,6 +26,14 @@
         android:orientation="horizontal"
         app:layout_constraintGuide_percent="0.59" />
 
+    <!-- v5.x: rodapé para a marca DRUMMACHI (abaixo de PLAY/FILL) -->
+    <androidx.constraintlayout.widget.Guideline
+        android:id="@+id/gFooter"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        app:layout_constraintGuide_percent="0.94" />
+
     <!-- ===== HEADER (0-18%): menu + Style/Blues 1 (esquerda) ===== -->
     <LinearLayout
         android:id="@+id/headerLeft"
@@ -72,6 +80,18 @@
                 android:textColor="@color/text_primary"
                 android:textSize="20sp" />
         </LinearLayout>
+
+        <!-- v5.x: estrela de favorito (marca/desmarca o ritmo ativo) -->
+        <ImageView
+            android:id="@+id/favButton"
+            android:layout_width="34dp"
+            android:layout_height="34dp"
+            android:layout_marginStart="14dp"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:clickable="true"
+            android:focusable="true"
+            android:contentDescription="@string/fav_toggle"
+            android:src="@drawable/ic_star_outline" />
     </LinearLayout>
 
     <!-- ===== HEADER: BPM (centro) + slider contínuo (v4.4) ===== -->
@@ -123,7 +143,7 @@
         app:layout_constraintVertical_bias="0.5">
     </LinearLayout>
 
-    <!-- ===== v4.8: DRUMMACHI no meio dos botões (detalhe fino) ===== -->
+    <!-- ===== v5.x: DRUMMACHI no rodapé (abaixo de PLAY/FILL, centralizado) ===== -->
     <TextView
         android:id="@+id/brandCenter"
         android:layout_width="wrap_content"
@@ -137,7 +157,7 @@
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="@id/gHeaderEnd" />
+        app:layout_constraintTop_toTopOf="@id/gFooter" />
 
     <!-- ===== GRADE 2x2 ===== -->
 
@@ -282,11 +302,10 @@
         android:layout_marginStart="20dp"
         android:layout_marginEnd="6dp"
         android:layout_marginTop="6dp"
-        android:layout_marginBottom="16dp"
         android:background="@drawable/bg_btn_play"
         android:clickable="true"
         android:focusable="true"
-        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintBottom_toTopOf="@id/gFooter"
         app:layout_constraintEnd_toStartOf="@id/fillButton"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="@id/gGridMid">
@@ -340,11 +359,10 @@
         android:layout_marginStart="6dp"
         android:layout_marginEnd="20dp"
         android:layout_marginTop="6dp"
-        android:layout_marginBottom="16dp"
         android:background="@drawable/bg_btn_fill"
         android:clickable="true"
         android:focusable="true"
-        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintBottom_toTopOf="@id/gFooter"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toEndOf="@id/playButton"
         app:layout_constraintTop_toTopOf="@id/gGridMid">
@@ -476,6 +494,20 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content" />
 
+            <!-- v5.5: REVERB global (bus master) -->
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:layout_marginTop="10dp"
+                android:layout_marginBottom="2dp"
+                android:background="@color/text_muted" />
+
+            <include
+                android:id="@+id/mixerReverb"
+                layout="@layout/mixer_reverb_row"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content" />
+
             <Space
                 android:layout_width="0dp"
                 android:layout_height="0dp"
@@ -486,7 +518,7 @@
                 android:layout_height="wrap_content"
                 android:gravity="center_horizontal"
                 android:layout_gravity="center_horizontal"
-                android:text="Deslize com 2 dedos para fechar"
+                android:text="Swipe with 2 fingers to close"
                 android:textColor="@color/text_muted"
                 android:textSize="11sp" />
         </LinearLayout>

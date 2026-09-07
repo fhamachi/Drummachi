@@ -1,0 +1,72 @@
+name: Build Release AAB
+
+# Gera o Android App Bundle (assinado) para publicação no Google Play.
+# Roda em ubuntu-latest (x86_64), onde o toolchain nativo do Google funciona.
+# Configurar 4 secrets no repo (Settings → Secrets and variables → Actions):
+#   PLAY_KEYSTORE_B64    -> base64 do arquivo drummachi-release.keystore
+#   PLAY_STORE_PASSWORD  -> storePassword (arquivo keystore-credentials.txt)
+#   PLAY_KEY_ALIAS       -> drummachi
+#   PLAY_KEY_PASSWORD    -> keyPassword (arquivo keystore-credentials.txt)
+#
+# v5.5: usa -PbuildNative=1, então o AAB já inclui o libdrummachi.so compilado
+# do engine.cpp (com reverb). Para só reconstruir o .so (sem release), use o
+# workflow "Native .so build" (native-build.yml).
+
+on:
+  workflow_dispatch:   # botão "Run workflow" na aba Actions
+  push:
+    tags: ["v*"]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: DrumMachine
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Accept licenses & install SDK 36
+        run: |
+          yes | sdkmanager --licenses >/dev/null 2>&1 || true
+          sdkmanager "platforms;android-36" "build-tools;34.0.0" >/dev/null
+
+      # O gradle.properties local aponta p/ um aapt2 arm64 (só existe no seu
+      # aparelho aarch64). No CI (x86_64) usamos o aapt2 padrão do Google, então
+      # removemos essa linha para não quebrar o build.
+      - name: Remove arm64 aapt2 override
+        run: sed -i '/aapt2FromMavenOverride/d' gradle.properties
+
+      - name: Create keystore from secrets
+        env:
+          KS_B64: ${{ secrets.PLAY_KEYSTORE_B64 }}
+          KS_STORE_PASS: ${{ secrets.PLAY_STORE_PASSWORD }}
+          KS_ALIAS: ${{ secrets.PLAY_KEY_ALIAS }}
+          KS_KEY_PASS: ${{ secrets.PLAY_KEY_PASSWORD }}
+        run: |
+          echo "$KS_B64" | base64 -d > drummachi-release.keystore
+          cat > keystore.properties <<EOF
+          storeFile=$GITHUB_WORKSPACE/DrumMachine/drummachi-release.keystore
+          storePassword=$KS_STORE_PASS
+          keyAlias=$KS_ALIAS
+          keyPassword=$KS_KEY_PASS
+          EOF
+
+      - name: Build release AAB
+        run: ./gradlew bundleRelease -PplayRelease=1 -PbuildNative=1 --no-daemon
+
+      - name: Upload AAB artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: drummachi-release
+          path: DrumMachine/app/build/outputs/bundle/release/app-release.aab
