@@ -66,6 +66,7 @@ jobs:
         uses: stefanzweifel/git-auto-commit-action@v5
         with:
           commit_message: "ci: rebuild libdrummachi.so (v5.5 reverb level+time)"
-          file_pattern: "app/src/main/jniLibs/**/*.so"
+          # caminho relativo à RAIZ do repo (o checkout é a raiz; só o working-directory dos run: é DrumMachine)
+          file_pattern: "DrumMachine/app/src/main/jniLibs/**/*.so"
           commit_user_name: github-actions[bot]
           commit_user_email: 41898282+github-actions[bot]@users.noreply.github.com
