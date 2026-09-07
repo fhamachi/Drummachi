@@ -128,7 +128,7 @@ class MainActivity : AppCompatActivity(),
         themePrefs = getSharedPreferences("drummachi_theme", Context.MODE_PRIVATE)
         applySavedTheme()
 
-        // ---- Diagnóstico v4.2: captura qualquer erro e mostra na tela ----
+        // ---- Diagnóstico v4.2: captura qualquer erro e grava em arquivo (sem diálogo) ----
         val crashFile = File(filesDir, "drummachi_crash.log")
         Thread.setDefaultUncaughtExceptionHandler { thread, throwable ->
             try {
@@ -138,14 +138,7 @@ class MainActivity : AppCompatActivity(),
                 )
             } catch (_: Exception) {}
         }
-        if (crashFile.exists() && crashFile.length() > 0) {
-            val prev = crashFile.readText().takeLast(2000)
-            AlertDialog.Builder(this)
-                .setTitle("Previous crash log")
-                .setMessage(prev)
-                .setPositiveButton("OK", null)
-                .show()
-        }
+        // v5.5: diálogo "Previous crash log" removido (não exibir stack trace ao usuário final)
 
         setContentView(R.layout.activity_main)
 
