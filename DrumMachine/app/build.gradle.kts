@@ -7,8 +7,8 @@ val playRelease = providers.gradleProperty("playRelease").orNull == "1"
 // (onde o NDK/CMake do Google funcionam). Local (aarch64) fica OFF e usa o .so precompilado.
 val buildNative = providers.gradleProperty("buildNative").orNull == "1"
 val api = if (playRelease) 36 else 34
-val vc = if (playRelease) 1 else 13
-val vn = if (playRelease) "1.0.0" else "5.4-beta"  // release: 1ª pública; dev: 5.4-beta
+val vc = if (playRelease) 1 else 14
+val vn = if (playRelease) "1.0.0" else "5.5"  // release: 1ª pública; dev: 5.5
 
 // Credenciais de assinatura (release). Arquivo gitignorado: keystore.properties
 val keystoreProps = Properties()
