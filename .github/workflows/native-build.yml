@@ -36,6 +36,11 @@ jobs:
           yes | sdkmanager --licenses >/dev/null 2>&1 || true
           sdkmanager "ndk;26.1.10909125" "cmake;3.22.1" "platforms;android-34" >/dev/null
 
+      # O gradle.properties local aponta p/ um aapt2 arm64 (do seu aarch64), que
+      # NÃO existe no CI (x86_64). Removemos a linha para usar o aapt2 do Google.
+      - name: Remove arm64 aapt2 override
+        run: sed -i '/aapt2FromMavenOverride/d' gradle.properties
+
       - name: Build libdrummachi.so from engine.cpp (v5.5 reverb)
         run: ./gradlew -PbuildNative=1 :app:assembleDebug --no-daemon
 
