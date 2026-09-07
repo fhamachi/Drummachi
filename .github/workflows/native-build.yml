@@ -44,14 +44,18 @@ jobs:
       - name: Build libdrummachi.so from engine.cpp (v5.5 reverb)
         run: ./gradlew -PbuildNative=1 :app:assembleDebug --no-daemon
 
-      - name: Copy built .so into jniLibs
+      - name: Copy built .so files into jniLibs
         run: |
           SO="$(find app/build -path '*arm64-v8a/libdrummachi.so' | grep -i merged | head -1)"
           [ -n "$SO" ] || SO="$(find app/build -name libdrummachi.so | grep arm64-v8a | head -1)"
           [ -n "$SO" ] || { echo "libdrummachi.so não gerado"; exit 1; }
+          OBOE="$(find app/build -path '*arm64-v8a/liboboe.so' | grep -i merged | head -1)"
+          [ -n "$OBOE" ] || OBOE="$(find app/build -name liboboe.so | grep arm64-v8a | head -1)"
           mkdir -p app/src/main/jniLibs/arm64-v8a
           cp -f "$SO" app/src/main/jniLibs/arm64-v8a/libdrummachi.so
-          echo "gerado a partir de: $SO"
+          # libdrummachi.so é linkado contra liboboe.so (prefab) — comitar junto
+          if [ -n "$OBOE" ]; then cp -f "$OBOE" app/src/main/jniLibs/arm64-v8a/liboboe.so; fi
+          echo "jniLibs contém: $(ls app/src/main/jniLibs/arm64-v8a/)"
 
       - name: Verify native lib
         run: |
