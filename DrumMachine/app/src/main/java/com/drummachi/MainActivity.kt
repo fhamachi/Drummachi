@@ -9,6 +9,7 @@ import android.content.Intent
 import android.graphics.Typeface
 import android.net.Uri
 import android.os.Bundle
+import android.provider.OpenableColumns
 import android.text.Html
 import android.text.method.LinkMovementMethod
 import android.util.Log
@@ -25,6 +26,7 @@ import android.widget.ImageView
 import android.widget.SeekBar
 import android.widget.TextView
 import android.widget.Toast
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.app.AppCompatDelegate
 import androidx.core.content.ContextCompat
@@ -120,6 +122,12 @@ class MainActivity : AppCompatActivity(),
     private lateinit var gestureDetector: GestureDetector
     private var headerEndPx = 0f
     private var footerPx = 0f
+
+    // v5.6: importação de estilos via SAF (file picker) — sem reinstalar
+    private val importStyleLauncher =
+        registerForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
+            uri?.let { importStyleFrom(uri) }
+        }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -231,7 +239,7 @@ class MainActivity : AppCompatActivity(),
         val items = arrayOf(
             getString(R.string.menu_styles),
             getString(R.string.menu_favorites),
-            getString(R.string.menu_import_midi),
+            getString(R.string.menu_import_style),
             getString(R.string.menu_theme),
             getString(R.string.menu_about),
             getString(R.string.menu_close)
@@ -242,12 +250,50 @@ class MainActivity : AppCompatActivity(),
                 when (which) {
                     0 -> showStylesDialog()
                     1 -> showFavoritesDialog()
-                    2 -> Toast.makeText(this, R.string.import_midi_soon, Toast.LENGTH_SHORT).show()
+                    2 -> importStyleLauncher.launch(arrayOf("*/*"))
                     3 -> showThemeDialog()
                     4 -> showAboutDialog()
                 }
             }
             .show()
+    }
+
+    // ---------- Importação de estilos (v5.6) ----------
+
+    /** v5.6: copia o JSON escolhido para filesDir/styles e recarrega na hora. */
+    private fun importStyleFrom(uri: Uri) {
+        try {
+            var fileName = "imported.json"
+            contentResolver.query(uri, arrayOf(OpenableColumns.DISPLAY_NAME), null, null, null)
+                ?.use { c ->
+                    if (c.moveToFirst()) {
+                        val idx = c.getColumnIndex(OpenableColumns.DISPLAY_NAME)
+                        if (idx >= 0) c.getString(idx)?.let { fileName = it }
+                    }
+                }
+            if (!fileName.endsWith(".json", ignoreCase = true)) {
+                Toast.makeText(this, R.string.import_style_not_json, Toast.LENGTH_SHORT).show()
+                return
+            }
+            val text = contentResolver.openInputStream(uri)
+                ?.bufferedReader()?.use { it.readText() }
+                ?: throw IllegalStateException("Cannot read content")
+            // Valida o schema antes de gravar (mesmo parser usado no loader)
+            parseStyleGroup(text) // lança exceção se inválido
+            val safeName = fileName.substringBeforeLast('.').lowercase()
+                .replace(Regex("[^a-z0-9_-]"), "_") + ".json"
+            val dir = File(filesDir, "styles").apply { mkdirs() }
+            File(dir, safeName).writeText(text)
+            // Recarrega a biblioteca inteira (assets + imports) e aplica o importado
+            styleGroups = loadStyles()
+            buildRhythmIndex()
+            val estilo = JSONObject(text).getString("estilo")
+            styleGroups.find { it.estilo == estilo }?.ritmos?.firstOrNull()?.let { applyStyle(it) }
+            Toast.makeText(this, getString(R.string.import_style_ok, estilo), Toast.LENGTH_SHORT).show()
+        } catch (t: Throwable) {
+            Log.e("Drummachi", "Import style failed", t)
+            Toast.makeText(this, R.string.import_style_error, Toast.LENGTH_SHORT).show()
+        }
     }
 
     /** Submenu Tema: Claro / Escuro / Automático (segue o sistema). */
@@ -651,38 +697,58 @@ class MainActivity : AppCompatActivity(),
         setFillGlow(active)
     }
 
-    // ---------- Carregamento dos ritmos (assets/styles) ----------
+    // ---------- Carregamento dos ritmos (assets/styles + imports) ----------
 
+    /** v5.6: carrega os estilos embutidos (assets) + os importados pelo usuário
+     *  (filesDir/styles). Um JSON importado SUBSTITUI o embutido de mesmo estilo. */
     private fun loadStyles(): List<StyleGroup> {
-        val groups = mutableListOf<StyleGroup>()
-        // v4.9: todos os .json em assets/styles (16 famílias do dmp_midi)
+        val byStyle = LinkedHashMap<String, StyleGroup>()
+        // 1) Embutidos no APK (assets/styles)
         val files = assets.list("styles")?.filter { it.endsWith(".json") }?.map { it.removeSuffix(".json") }
             ?: emptyList()
         for (file in files.sorted()) {
             try {
                 val text = assets.open("styles/$file.json").bufferedReader().use { it.readText() }
-                val root = JSONObject(text)
-                val estilo = root.getString("estilo")
-                val ritmos = root.getJSONArray("ritmos")
-                val list = mutableListOf<Rhythm>()
-                for (i in 0 until ritmos.length()) {
-                    val r = ritmos.getJSONObject(i)
-                    list += Rhythm(
-                        nome = r.getString("nome"),
-                        descricao = r.optString("descricao"),
-                        bpm = r.getInt("bpm"),
-                        compasso = r.optString("compasso", "4/4"), // v5.0
-                        verso = parsePatterns(r.getJSONObject("verso")),
-                        refrao = parsePatterns(r.getJSONObject("refrao")),
-                        fill = parsePatterns(r.getJSONObject("fill"))
-                    )
-                }
-                groups += StyleGroup(estilo, list)
+                val g = parseStyleGroup(text)
+                byStyle[g.estilo] = g
             } catch (t: Throwable) {
                 Log.e("Drummachi", "Falha ao carregar styles/$file.json", t)
             }
         }
-        return groups
+        // 2) Importados (filesDir/styles) — vencem os embutidos de mesmo estilo
+        val importDir = File(filesDir, "styles")
+        val imports = importDir.listFiles()?.filter { it.name.endsWith(".json") }?.sortedBy { it.name }
+            ?: emptyList()
+        for (f in imports) {
+            try {
+                val g = parseStyleGroup(f.readText())
+                byStyle[g.estilo] = g
+            } catch (t: Throwable) {
+                Log.e("Drummachi", "Falha ao carregar importado ${f.name}", t)
+            }
+        }
+        return byStyle.values.toList()
+    }
+
+    /** Converte o texto de um JSON de estilo em StyleGroup. Lança exceção se inválido. */
+    private fun parseStyleGroup(text: String): StyleGroup {
+        val root = JSONObject(text)
+        val estilo = root.getString("estilo")
+        val ritmos = root.getJSONArray("ritmos")
+        val list = mutableListOf<Rhythm>()
+        for (i in 0 until ritmos.length()) {
+            val r = ritmos.getJSONObject(i)
+            list += Rhythm(
+                nome = r.getString("nome"),
+                descricao = r.optString("descricao"),
+                bpm = r.getInt("bpm"),
+                compasso = r.optString("compasso", "4/4"), // v5.0
+                verso = parsePatterns(r.getJSONObject("verso")),
+                refrao = parsePatterns(r.getJSONObject("refrao")),
+                fill = parsePatterns(r.getJSONObject("fill"))
+            )
+        }
+        return StyleGroup(estilo, list)
     }
 
     private fun parsePatterns(obj: JSONObject): Patterns = Patterns(

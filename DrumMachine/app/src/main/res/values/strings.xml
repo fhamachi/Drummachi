@@ -10,7 +10,7 @@
     <string name="style_value">Basic Rock</string>
     <string name="menu_title">Menu</string>
     <string name="menu_styles">Styles</string>
-    <string name="menu_import_midi">Import MIDI</string>
+    <string name="menu_import_style">Import Style</string>
     <string name="menu_about">About</string>
     <string name="menu_close">Close</string>
     <string name="menu_theme">Theme</string>
@@ -24,7 +24,9 @@
     <string name="fav_removed">Removed from favorites</string>
     <string name="fav_empty">No favorites yet</string>
     <string name="fav_count">Favorite %1$d/%2$d — %3$s</string>
-    <string name="import_midi_soon">Import MIDI — coming soon</string>
+    <string name="import_style_ok">Style imported — %1$s</string>
+    <string name="import_style_error">Invalid style JSON — nothing imported</string>
+    <string name="import_style_not_json">Pick a .json file</string>
     <string name="about_title">About Drummachi</string>
     <!-- v5.1: About reescrito pelo Felipe (EN) — link GoFundMe clicável + Pix copiável + QR code -->
     <string name="about_text">Hello, I\'m Felipe Hamachi. Musician, comedian and IT professional.<br/><br/>
