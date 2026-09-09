@@ -25,6 +25,8 @@
     <string name="fav_empty">No favorites yet</string>
     <string name="fav_count">Favorite %1$d/%2$d — %3$s</string>
     <string name="import_style_ok">Style imported — %1$s</string>
+    <string name="import_style_ok_multi">Imported %1$d styles: %2$s</string>
+    <string name="import_style_ok_multi_partial">Imported %1$d styles (%3$d failed): %2$s</string>
     <string name="import_style_error">Invalid style JSON — nothing imported</string>
     <string name="import_style_not_json">Pick a .json file</string>
     <string name="about_title">About Drummachi</string>

@@ -123,10 +123,29 @@ class MainActivity : AppCompatActivity(),
     private var headerEndPx = 0f
     private var footerPx = 0f
 
-    // v5.6: importação de estilos via SAF (file picker) — sem reinstalar
+    // v5.7: importação de estilos em massa via SAF (multi-select) — sem reinstalar
     private val importStyleLauncher =
-        registerForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
-            uri?.let { importStyleFrom(uri) }
+        registerForActivityResult(ActivityResultContracts.OpenMultipleDocuments()) { uris ->
+            if (uris.isNullOrEmpty()) return@registerForActivityResult
+            val imported = mutableListOf<String>()
+            var badFiles = 0
+            uris.forEach { uri ->
+                val estilo = importStyleFrom(uri)
+                if (estilo != null) imported.add(estilo) else badFiles++
+            }
+            if (imported.isNotEmpty()) {
+                styleGroups = loadStyles()
+                buildRhythmIndex()
+                val estilo = imported.last()
+                styleGroups.find { it.estilo == estilo }?.ritmos?.firstOrNull()?.let { applyStyle(it) }
+                val msg = if (badFiles > 0)
+                    getString(R.string.import_style_ok_multi_partial, imported.size, imported.joinToString(", "), badFiles)
+                else
+                    getString(R.string.import_style_ok_multi, imported.size, imported.joinToString(", "))
+                Toast.makeText(this, msg, Toast.LENGTH_LONG).show()
+            } else {
+                Toast.makeText(this, R.string.import_style_error, Toast.LENGTH_SHORT).show()
+            }
         }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -260,9 +279,9 @@ class MainActivity : AppCompatActivity(),
 
     // ---------- Importação de estilos (v5.6) ----------
 
-    /** v5.6: copia o JSON escolhido para filesDir/styles e recarrega na hora. */
-    private fun importStyleFrom(uri: Uri) {
-        try {
+    /** v5.7: copia um JSON para filesDir/styles. Retorna o estilo importado, ou null se falhou. */
+    private fun importStyleFrom(uri: Uri): String? {
+        return try {
             var fileName = "imported.json"
             contentResolver.query(uri, arrayOf(OpenableColumns.DISPLAY_NAME), null, null, null)
                 ?.use { c ->
@@ -273,7 +292,7 @@ class MainActivity : AppCompatActivity(),
                 }
             if (!fileName.endsWith(".json", ignoreCase = true)) {
                 Toast.makeText(this, R.string.import_style_not_json, Toast.LENGTH_SHORT).show()
-                return
+                return null
             }
             val text = contentResolver.openInputStream(uri)
                 ?.bufferedReader()?.use { it.readText() }
@@ -284,15 +303,10 @@ class MainActivity : AppCompatActivity(),
                 .replace(Regex("[^a-z0-9_-]"), "_") + ".json"
             val dir = File(filesDir, "styles").apply { mkdirs() }
             File(dir, safeName).writeText(text)
-            // Recarrega a biblioteca inteira (assets + imports) e aplica o importado
-            styleGroups = loadStyles()
-            buildRhythmIndex()
-            val estilo = JSONObject(text).getString("estilo")
-            styleGroups.find { it.estilo == estilo }?.ritmos?.firstOrNull()?.let { applyStyle(it) }
-            Toast.makeText(this, getString(R.string.import_style_ok, estilo), Toast.LENGTH_SHORT).show()
+            JSONObject(text).getString("estilo")
         } catch (t: Throwable) {
             Log.e("Drummachi", "Import style failed", t)
-            Toast.makeText(this, R.string.import_style_error, Toast.LENGTH_SHORT).show()
+            null
         }
     }
 
