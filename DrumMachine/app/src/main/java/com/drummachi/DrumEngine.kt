@@ -122,6 +122,13 @@ class DrumEngine {
     fun setReverbTime(time: Float) = nativeSetReverbTime(time.coerceIn(0f, 1f))
 
     /**
+     * v5.8: SWING control — 0.0 = straight (sem delay, som original), 0.5 =
+     * shuffle clássico (tercinas), 1.0 = arrasto pesado. Aplica atraso nas
+     * semicolcheias ímpares (odds) sem alterar o comprimento do compasso.
+     */
+    fun setSwing(swing: Float) = nativeSetSwing(swing.coerceIn(0f, 1f))
+
+    /**
      * v4.8: dispara um som imediatamente (one-shot, ex.: crash cymbal).
      */
     fun playOneShot(soundId: Int) = nativePlayOneShot(soundId)
@@ -147,6 +154,7 @@ class DrumEngine {
     private external fun nativeSetTone(soundId: Int, tone: Float)
     private external fun nativeSetReverbLevel(level: Float)
     private external fun nativeSetReverbTime(time: Float)
+    private external fun nativeSetSwing(swing: Float)
     private external fun nativePlayOneShot(soundId: Int)
     private external fun nativeSetFillListener(listener: FillListener?)
     private external fun nativeSetCrashLogPath(path: String?)

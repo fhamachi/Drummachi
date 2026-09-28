@@ -514,6 +514,20 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content" />
 
+            <!-- v5.8: SWING global (groove) -->
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:layout_marginTop="10dp"
+                android:layout_marginBottom="2dp"
+                android:background="@color/text_muted" />
+
+            <include
+                android:id="@+id/mixerSwingRow"
+                layout="@layout/mixer_swing_row"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content" />
+
             <Space
                 android:layout_width="0dp"
                 android:layout_height="0dp"

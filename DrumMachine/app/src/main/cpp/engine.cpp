@@ -263,6 +263,17 @@ static std::atomic<bool> g_fillPending{false};
 static std::atomic<bool> g_running{false};
 static std::atomic<int> g_oneShotPending{-1}; // v4.8: crash/one-shot imediato
 
+// ---------------------------------------------------------------------------
+// v5.8: SWING/shuffle — atraso (em fração de semicolcheia) aplicado às
+// semicolcheias ODD (posições ímpares do step) para dar o "groove arrastado".
+// g_swing: 0.0 = straight (bypass total, som idêntico ao de sempre) ..
+//          0.5 = shuffle clássico (tercina) .. máx 0.67.
+// O compasso não estica: o offset é consistente em todo o loop e o relógio
+// (nextStepFrame) continua na grade reta — só a hora de disparo das notas é
+// empurrada. Lido UMA vez por callback, fora do loop de agendamento.
+// ---------------------------------------------------------------------------
+static std::atomic<float> g_swing{0.0f};
+
 // v5.0: fórmula de compasso. Padrão 4/4 (16 semicolcheias, 4 batidas).
 // Estilos 6/8 (blues/shuffle/swing): 12 semicolcheias, 6 batidas (colcheias).
 static std::atomic<int> g_stepsPerBar{16};  // semicolcheias por compasso
@@ -291,7 +302,7 @@ static void initPatterns() {
 }
 
 struct SchedState {
-    int64_t nextStepFrame = 0; // posição absoluta da próxima semicolcheia
+    int64_t nextStepFrame = 0; // posição absoluta da próxima semicolcheia (grade reta)
     int stepInBar = 0;         // 0..15
     int beatCount = 1;         // 1..4
     bool fillBar = false;
@@ -385,6 +396,15 @@ public:
         const int beatsPerBar = g_beatsPerBar.load();
         const int stepsPerBeat = stepsPerBar / beatsPerBar; // 4/4→4, 6/8→2
 
+        // v5.8: SWING (lido UMA vez por callback). Atraso fracionado aplicado
+        // às semicolcheias ODD via grade alternada: intervalo par->ímpar
+        // estica (1+d), ímpar->par encolhe (1-d) — o comprimento do compasso e
+        // os tempos (steps pares) continuam exatos. d = swing * 2/3: em 0.5 do
+        // slider vira tercina clássica (shuffle); 1.0 = arrasto pesado.
+        // Fast-path: swing 0 usa o caminho antigo, inteiro, byte-idêntico.
+        const double swingDelayFrac = g_swing.load() * 0.6666;
+        const bool swingOn = swingDelayFrac > 0.0001;
+
         // ---- agendamento sample-accurate das semicolcheias ----
         const double stepFrames = 60.0 * g_sampleRate / static_cast<double>(g_bpm.load()) / 4.0;
         if (g_sched.nextStepFrame < bufferStart) g_sched.nextStepFrame = bufferStart;
@@ -443,8 +463,19 @@ public:
                     g_sched.crashOnDownbeat = true;
                 }
             }
-            g_sched.nextStepFrame = static_cast<int64_t>(
-                static_cast<double>(g_sched.nextStepFrame) + stepFrames);
+            // v5.8: grade alternada do swing — intervalo par->ímpar estica
+            // (1+d), ímpar->par encolhe (1-d). A média por ciclo de 2 steps é
+            // exatamente stepFrames, então o compasso NUNCA estica e os
+            // downbeats/tempos (steps pares) continuam na posição exata.
+            // Sem swing (swingOn=false) o fator é 1.0 = caminho antigo.
+            {
+                double swingFactor = 1.0;
+                if (swingOn)
+                    swingFactor = (step % 2 == 1) ? (1.0 - swingDelayFrac)
+                                                  : (1.0 + swingDelayFrac);
+                g_sched.nextStepFrame = static_cast<int64_t>(
+                    static_cast<double>(g_sched.nextStepFrame) + stepFrames * swingFactor);
+            }
         }
 
         // ---- mixagem ----
@@ -817,6 +848,16 @@ Java_com_drummachi_DrumEngine_nativeSetReverbTime(JNIEnv *, jobject, jfloat time
     if (v < 0.0f) v = 0.0f;
     if (v > 1.0f) v = 1.0f;
     g_reverbTime.store(v);
+}
+
+// v5.8: SWING (0..1; 0 = straight/bypass, 0.5 = shuffle tercina, máx arrasto
+// pesado ~0.9 em engine.cpp). Clamp aqui garante entrada sempre válida.
+extern "C" JNIEXPORT void JNICALL
+Java_com_drummachi_DrumEngine_nativeSetSwing(JNIEnv *, jobject, jfloat swing) {
+    float v = swing;
+    if (v < 0.0f) v = 0.0f;
+    if (v > 1.0f) v = 1.0f;
+    g_swing.store(v);
 }
 
 // v4.4: registra o listener de fill (Kotlin: onFillChanged(boolean)).

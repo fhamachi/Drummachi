@@ -901,6 +901,24 @@ class MainActivity : AppCompatActivity(),
             override fun onStopTrackingTouch(sb: SeekBar?) {}
         })
 
+        // v5.8: SWING global — % de atraso das semicolcheias odd, persistido em drummachi_mixer
+        val swingRow = findViewById<View>(R.id.mixerSwingRow)
+        val swingSb = swingRow.findViewById<SeekBar>(R.id.mixerSwing)
+        val swingValueTv = swingRow.findViewById<TextView>(R.id.swingValue)
+        val swingPct = prefs.getInt("swing", 0)
+        swingSb.progress = swingPct
+        swingValueTv.text = "$swingPct%"
+        drumEngine.setSwing(swingPct / 100f)
+        swingSb.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
+            override fun onProgressChanged(sb: SeekBar?, p: Int, fromUser: Boolean) {
+                drumEngine.setSwing(p / 100f)
+                swingValueTv.text = "$p%"
+                prefs.edit().putInt("swing", p).apply()
+            }
+            override fun onStartTrackingTouch(sb: SeekBar?) {}
+            override fun onStopTrackingTouch(sb: SeekBar?) {}
+        })
+
         // Painel começa fechado
         mixerPanel.visibility = View.GONE
     }
