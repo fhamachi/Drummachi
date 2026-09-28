@@ -1,12 +1,19 @@
 name: Native .so build
 
 # v5.5: reconstrução do libdrummachi.so a partir do engine.cpp (x86_64), com o
-# reverb. Disparo MANUAL — rode sempre que o engine.cpp mudar. Ao final, commita
-# o .so novo em app/src/main/jniLibs/arm64-v8a/ (aí os builds locais/release usam).
+# reverb. v5.8: roda automaticamente em push que mude o código nativo (paths abaixo)
+# e também por dispatch manual. Ao final, commita o .so novo em
+# app/src/main/jniLibs/arm64-v8a/ (aí os builds locais/release usam).
+# O commit do próprio .so NÃO re-dispara (fora dos paths).
 # Só o job de .so: NÃO precisa dos secrets de keystore do release.
 
 on:
   workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - 'DrumMachine/app/src/main/cpp/**'
+      - '.github/workflows/native-build.yml'
 
 jobs:
   build-native-lib:
