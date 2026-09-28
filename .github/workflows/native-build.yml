@@ -64,12 +64,14 @@ jobs:
             grep nativeSetReverbLevel >/dev/null || { echo "sem nativeSetReverbLevel"; exit 1; }
           "$readelf_sh" -Ws app/src/main/jniLibs/arm64-v8a/libdrummachi.so | \
             grep nativeSetReverbTime >/dev/null || { echo "sem nativeSetReverbTime"; exit 1; }
-          echo "reverb symbols OK"
+          "$readelf_sh" -Ws app/src/main/jniLibs/arm64-v8a/libdrummachi.so | \
+            grep nativeSetSwing >/dev/null || { echo "sem nativeSetSwing"; exit 1; }
+          echo "symbols OK"
 
       - name: Commit rebuilt .so
         uses: stefanzweifel/git-auto-commit-action@v5
         with:
-          commit_message: "ci: rebuild libdrummachi.so (v5.5 reverb level+time)"
+          commit_message: "ci: rebuild libdrummachi.so (v5.8 swing + reverb)"
           # caminho relativo à RAIZ do repo (o checkout é a raiz; só o working-directory dos run: é DrumMachine)
           file_pattern: "DrumMachine/app/src/main/jniLibs/**/*.so"
           commit_user_name: github-actions[bot]
