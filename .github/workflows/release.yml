@@ -33,11 +33,12 @@ jobs:
           distribution: temurin
           java-version: '17'
 
-      - name: Set up Android SDK
-        uses: android-actions/setup-android@v3
-
+      # 09/2026: setup-android@v3 quebrou no ubuntu-latest (tenta instalar o pacote
+      # obsoleto 'tools' -> "Failed to find package 'tools'"). O runner JÁ vem com o
+      # SDK pré-instalado (ANDROID_HOME) — usamos o sdkmanager dele direto.
       - name: Accept licenses & install SDK 36
         run: |
+          export PATH="$ANDROID_HOME/cmdline-tools/latest/bin:$PATH"
           yes | sdkmanager --licenses >/dev/null 2>&1 || true
           sdkmanager "platforms;android-36" "build-tools;34.0.0" >/dev/null
 
