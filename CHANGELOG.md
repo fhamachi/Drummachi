@@ -1,9 +1,54 @@
 # Drummachi — Changelog
 
 > 100% free drum machine for Android, created by Felipe Hamachi (Ilhabela, SP, Brazil).
-> Oboe low-latency audio engine · 66 grooves across 16 styles · BPM 40–240 · 4/4 and 6/8 time signatures.
+> Oboe low-latency audio engine · 24 factory grooves across 12 styles · BPM 40–240 · 4/4 and 6/8 time signatures.
 
 ---
+
+## v5.8-beta — 2026-09-28
+**New**
+- **SWING control** — a SWING line in the mixer, sliding from **STRAIGHT** to **SHUFFLE**: it delays the odd sixteenth notes to lay the groove back (0.5 = classic shuffle triplet). The bar never stretches — the delay is applied on an alternating grid (even→odd stretches by `1+d`, odd→even shrinks by `1−d`), so downbeats and the tempo stay exact on every loop. Read once per audio callback; at 0 it takes the old integer fast path, byte-identical to the straight sound.
+- Swing value is **persisted between sessions** (`drummachi_mixer` prefs) and applied through a new `nativeSetSwing` JNI entry point.
+- Factory default remains **12 styles / 24 grooves**.
+**Build**
+- Native library rebuilt from the current `engine.cpp` in CI (`native-build.yml` now verifies the `nativeSetSwing` symbol before committing the `.so`).
+
+## v5.7 — 2026-09-09
+**New**
+- **12 factory styles / 24 grooves**: Pop, Rock, Dance, Blues, Funk and Soul (two rhythms each), plus Metal, Samba, Latino, Hip-Hop, Reggae and Jazz — replacing the seven classic loops.
+- **Bulk style import** (Menu → Import Style): pick several JSON files at once via SAF and get a summary toast.
+**Fixes**
+- Chicago Shuffle reworked: snare ghost on 2/10 (without doubling the hat), backbeat pushed to 3/11 like the approved Slow Blues, kick train only on the chorus.
+- Blues rebuilt with an authentic shuffle hat (0-3-4-7-8-11-12-15).
+
+## v5.6 — 2026-09-09
+**New**
+- **Style import via SAF** (Menu → **Import Style**) — add or override styles without reinstalling the app. The loader merges `assets/styles` with `filesDir/styles`, and an imported style overrides the built-in one with the same name.
+**Fixes**
+- Rhythm quality pass: clear 16th-note hat fills, cleaner boom-bap hip-hop verse, added latin kick.
+
+## v5.5 — 2026-09-07
+**New**
+- **Master reverb** — level (REVERB) and time controls on their own mixer row, with a scrollable panel so the row is never cut off in landscape.
+- **Theme selector** — Light / Dark / System.
+- **Favorites** — mark rhythms as favorites and jump straight to them (Menu → Favorites).
+- **About & donations** — Pix (Brazil) key with a COPY button and QR code hint, alongside the GoFundMe link.
+- **Native rebuild pipeline** — `native-build.yml` compiles `libdrummachi.so` from `engine.cpp` on CI (x86_64) and commits it back, so the packaged `.so` always matches the source.
+**Fixes**
+- Packaged `liboboe.so` (`libdrummachi.so` now depends on it via prefab) and copy it on CI.
+- Removed the "Previous crash log" dialog on launch (the log is still written to a file).
+
+## v5.2-beta — 2026-09-02 (first public release)
+**New**
+- **Oboe (C++) low-latency engine** with a sequencer inside the audio callback (hits scheduled by absolute frame position) — first public build of the rewritten engine.
+- Performance layout locked to landscape: TAP TEMPO, VERSE/CHORUS, PLAY/STOP, FILL, BPM slider (40–240) and visual pulse.
+- Curated factory loops: **Pop1, Blues1, Ska, Rock1, Twist1, Funk1 and Ballad1**.
+- Per-piece mixer (volume and tone) with two-finger side panel; values saved between sessions.
+- CRASH button (one-shot) and real crash sample.
+- Built-in kit as PCM16 WAV samples (Real Drums Vol. 1): KICK, SNARE, HAT, TOM FT/MT/HT, CRASH.
+- About section with donations (GoFundMe + Pix).
+
+> v5.1, v5.3 and v5.4 were internal dev builds (themes, crash/fill/favorites, Bluetooth audio fix) and were never tagged.
 
 ## v5.0.2-beta — 2026-08-29
 **Fixes**
@@ -71,7 +116,7 @@
 ## v4.0 (Oboe) — 2026-08-28
 **New (audio engine rewrite)**
 - **Oboe engine in C++** (Google's official library): LOW-LATENCY + EXCLUSIVE stream (automatic fallback), mono float audio at the device's native rate.
-- **Sequencer inside the audio callback**: hits scheduled by absolute frame position — ~1-sample precision (20µs at 48kHz), zero thread jitter.
+- **Sequencer inside the audio callback**: hits scheduled by absolute frame position — ~1-sample precision (20μs at 48kHz), zero thread jitter.
 - 8-voice pool with retrigger and overlap.
 - Same interface and controls (TAP TEMPO, VERSE/CHORUS, PLAY/STOP, FILL).
 

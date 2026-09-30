@@ -2,14 +2,15 @@
 
 **100% free drum machine for Android**, created by Felipe Hamachi (Ilhabela, SP, Brazil).
 
-> **Oboe** low-latency audio engine · **66 grooves** across **16 styles** · BPM 40–240 · **4/4 and 6/8** time signatures · 100% offline
+> **Oboe** low-latency audio engine · **24 factory grooves** across **12 styles** · BPM 40–240 · **4/4 and 6/8** time signatures · 100% offline
 
 ## ✨ Highlights
 
 - **Oboe (C++) audio engine** — low-latency + exclusive stream with automatic fallback
-- **66 `dmp_midi` grooves** across 16 styles: Afro, Ballad, Blues, Bossa Nova, Cha Cha, Disco, Funk, Pop, Reggae, Rhythm & Blues, Rock, Samba, Shuffle, Ska, Swing and Twist
+- **24 factory grooves** across 12 styles: Blues, Dance, Funk, Hip-Hop, Jazz, Latino, Metal, Pop, Reggae, Rock, Samba and Soul — plus **style import** (JSON via SAF) to add your own
 - **Per-piece mixer** — individual volume and tone (KICK, SNARE, HAT, TOM FT/MT/HT, CRASH) with a two-finger side panel; values saved between sessions
-- **Variable time signature** — 9 rhythms in 6/8 play at the correct tempo (12 sixteenth-note subdivisions per bar), with an adaptive count display (1-2-3-4 / 1-2-3-4-5-6)
+- **SWING control** — slide from STRAIGHT to SHUFFLE to lay the odd sixteenths back; the bar never stretches (downbeats stay exact) and the value is saved between sessions
+- **Variable time signature** — the engine plays 4/4 and 6/8 (12 sixteenth-note subdivisions per bar in 6/8), with an adaptive count display (1-2-3-4 / 1-2-3-4-5-6)
 - **Per-hit velocity (0–127)** — EZdrummer-level humanization
 - **Crash cymbal** with dedicated sound and one-shot button
 - **About section** with optional donations (GoFundMe + Pix Brazil)

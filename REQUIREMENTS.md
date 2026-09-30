@@ -4,7 +4,7 @@
 - **Android 6.0 (Marshmallow, API 23)** or higher
 - **ARM64 (64-bit) processor** — the app ships only the `arm64-v8a` native library
 - **Landscape screen** (the app is locked to landscape — recommended phone/tablet; does not work well in portrait)
-- **Free space:** ~50 MB of storage (~5 MB APK + in-use data)
+- **Free space:** ~60 MB of storage (~6.7 MB APK + in-use data)
 - **Connection:** none needed to play (fully offline)
 
 ## Recommended requirements
@@ -15,10 +15,10 @@
 
 ## Technical details
 - **Package:** `com.drummachi`
-- **APK size:** ~5.1 MB
+- **APK size:** ~6.7 MB
 - **ABI:** `arm64-v8a` (does not run on old 32-bit phones)
 - **Audio:** Oboe (C++), low-latency + exclusive stream with automatic fallback
-- **Content:** 66 grooves across 16 styles (Rock, Pop, Blues, Swing, Samba, Bossa Nova, Funk, Reggae, Disco, Afro, Ballad, Cha Cha, Ska, Shuffle, Twist, Rhythm & Blues), BPM 40–240, 4/4 and 6/8 time signatures
+- **Content:** 24 factory grooves across 12 styles (Blues, Dance, Funk, Hip-Hop, Jazz, Latino, Metal, Pop, Reggae, Rock, Samba, Soul), plus style import (JSON) — BPM 40–240, 4/4 and 6/8 time signatures
 - **Donations:** optional (GoFundMe + Pix Brazil) — the app is 100% free
 
 > Developed in Ilhabela, SP, Brazil 🇧🇷
